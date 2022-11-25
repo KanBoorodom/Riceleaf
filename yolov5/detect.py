@@ -106,7 +106,7 @@ def run(
     bs = 1  # batch_size #!------ diff
     if webcam:
         view_img = check_imshow(warn=True) #!------ diff
-        dataset = LoadStreams(source, img_size=imgsz, stride=stride, auto=pt, vid_stride=vid_stride,break_cam=breakVideo)
+        dataset = LoadStreams(source, img_size=imgsz, stride=stride, auto=pt, vid_stride=vid_stride) #break_cam=breakVideo
         if breakVideo: return
         bs = len(dataset)
     elif screenshot: #!------ diff

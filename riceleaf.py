@@ -9,6 +9,8 @@ from PIL import Image, ImageEnhance
 import os  
 import torch
 from yolov5.detect import run
+
+st.cache()
 #! Page Setup----------------------
 st.set_page_config(page_title="Rice Leaf Disease Detection",)
 #! Check----------------------
@@ -31,7 +33,6 @@ if 'break_cam' not in st.session_state:
 
 if 'allow_break_cam' not in st.session_state:
     st.session_state.allow_break_cam = False
-st.cache()
 def returnLang(thai, eng, lang):
     if(lang == 'ไทย'):
          return thai
@@ -77,6 +78,7 @@ def breakCam(uplType:str):
         st.session_state['break_cam'] = True
         st.session_state['allow_break_cam'] = True
 def main():
+    start_cam_btn = False
     st.markdown(
         """
             <style>
@@ -125,6 +127,18 @@ def main():
                     list-style-type:none;
                 }
                 [data-baseweb="accordion"]{padding:.125em;}
+                [data-testid="stCameraInput"] > label{
+                    font-size:20px;
+                    background:#978c54;
+                    color:#efdd83 !important;
+                    justify-content:center;
+                }
+                [data-testid="stCameraInput"] > div > button {
+                    background:#cd5858;
+                    color:white;
+                    font-size:30px;
+                }
+                [data-stale="false"] > .row-widget > button {width: 100%; border-color:red;}
                 .st-ic > div > div > div > p{font-size:1.8rem;}
             </style>  
         """,
@@ -248,9 +262,23 @@ def main():
             st.sidebar.warning('คุณกำลังใช้ภาพตัวอย่างในการประมวลผล', icon="⚠️")
         st.sidebar.image(image_file)
 
-#! Get Image Capture------------------------------------------------------------------------------------------------------------------------
+#! Get Webcam Image Capture------------------------------------------------------------------------------------------------------------------------
     elif file_upload == 'กล้องถ่ายรูป':
-        img_capture = st.camera_input("Take a picture")
+        camera = st.empty()
+        img_capture = camera.camera_input("เลือก 'Take Photo' เพื่อถ่ายรูปที่ต้องการใช้สำหรับการประมวลผล", label_visibility='collapsed')
+        if img_capture:
+            process_type = 'กล้องถ่ายรูป'
+            tffile = tempfile.NamedTemporaryFile(suffix='.mp4', delete=False)
+            tffile.write(img_capture.read())
+            temp_img = open(tffile.name, 'rb')
+            pilImg = Image.open(temp_img)
+            image_file = temp_img.name
+            camera.image(img_capture)
+            start_cam_btn = st.button(
+                'เริ่มต้นการประมวลผล',
+                key='start_cam_btn',
+            )
+   
 #! Get Webcam------------------------------------------------------------------------------------------------------------------------
     elif file_upload == 'Webcam Camera' or file_upload == 'กล้องเว็บแคม':
         process_type = 'กล้องเว็บแคม'
@@ -270,11 +298,13 @@ def main():
         args=(file_upload, )
     )
 
-    if start_btn or (st.session_state.break_cam and st.session_state.allow_break_cam):
+    if start_btn or (file_upload == 'กล้องถ่ายรูป' and start_cam_btn) or (st.session_state.break_cam and st.session_state.allow_break_cam):
         with st.spinner(f'กำลังประมวลผล{process_type}...'):
 #! Process Image------------------------------------------------------------------------------------------------------------------------
-            if file_upload == 'Image' or file_upload == 'รูปภาพ':
+            if file_upload == 'รูปภาพ' or file_upload == 'กล้องถ่ายรูป':
+                modelForImage.conf = confidence
                 if len(assigned_class_id) > 0:
+                    modelForImage.classes = assigned_class_id
                     result = modelForImage(image_file, size=640)
                 else:
                     result = modelForImage(image_file, size=640)
@@ -283,7 +313,9 @@ def main():
                     detectedClass = json['class']
                     detectedDict = {i:detectedClass.count(i) for i in detectedClass}
                     r_img = result.render()
-                    st.image(r_img)
+                    if file_upload == 'กล้องถ่ายรูป':
+                        camera.image(r_img)
+                    else: st.image(r_img)
 #! Process Video------------------------------------------------------------------------------------------------------------------------
             elif file_upload == 'Video' or file_upload == 'วิดีโอ':
                 stop = st.button(
@@ -345,7 +377,7 @@ def main():
                 st.session_state['break_cam'] = False
 
 #! Detected Result------------------------------------------------------------------------------------------------------------------------
-        if file_upload == 'Image' or file_upload == 'รูปภาพ' and start_btn:
+        if (file_upload == 'รูปภาพ' or file_upload == 'กล้องถ่ายรูป') and (start_btn or start_cam_btn):
             with st.container():
                 if detectedDict:
                     st.markdown('<h4 class="h4-success">ตรวจพบโรคใบข้าว</h4>', unsafe_allow_html=True)  
