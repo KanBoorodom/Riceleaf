@@ -21,7 +21,7 @@ detectedClass = []
 detectedDict = {}
 #! State------------------------------
 if 'disabled_btn' not in st.session_state:
-    st.session_state.disabled_btn = Falsessss
+    st.session_state.disabled_btn = False
 
 if 'break_video' not in st.session_state:
     st.session_state.break_video = False
@@ -334,7 +334,7 @@ def main():
                     ) 
                 else:
                     run(
-                        weights='M.pt', 
+                        weights='N.pt', 
                         source=0, 
                         device='cpu', 
                         breakVideo=st.session_state.break_cam,
