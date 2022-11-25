@@ -1,13 +1,14 @@
 # YOLOv5 requirements
 # Usage: pip install -r requirements.txt
 #UI 
+opencv-python-headless==4.5.3.56
 streamlit>=1.14.0
 streamlit-webrtc>=0.44.0
 av>= 9.2.0
 # Base ----------------------------------------
 matplotlib>=3.2.2
 numpy>=1.18.5
-opencv-python>=4.1.1
+#opencv-python>=4.1.1
 Pillow>=7.1.2
 PyYAML>=5.3.1
 requests>=2.23.0
