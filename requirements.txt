@@ -1,7 +1,7 @@
 # YOLOv5 requirements
 # Usage: pip install -r requirements.txt
 #UI 
-tkinter
+tk
 opencv-python-headless==4.5.3.56
 streamlit>=1.14.0
 streamlit-webrtc>=0.44.0

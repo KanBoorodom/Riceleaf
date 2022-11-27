@@ -176,13 +176,11 @@ def main():
                 [data-testid="stVerticalBlock"] div:nth-child(3) > div > div:nth-child(2){width:100%;display:none;}
                 [data-testid="stVerticalBlock"] div:nth-child(3) > div > div:nth-child(2) div{width:initial !important;}
                 @media only screen and (max-width: 425px) {
+                    [data-testid="stAppViewContainer"] > section:first-child{width:300px !important;}
                     [data-testid="stAppViewContainer"] > section:first-child > div:first-child{ width:300px;}
                     [data-testid="stVerticalBlock"] div:nth-child(3) > div > div:nth-child(2){display:initial;}
-                    section > .css-6qob1r .e1fqkh3o3{background:green !important; width:300px !important;}
-                    [data-testid="stSidebar"] .block-container
-                    {
-                        max-width:260px;
-                    }
+                    section > .css-6qob1r .e1fqkh3o3{background: width:300px !important;}
+                    [data-testid="stSidebar"] .block-container{max-width:250px;}
                 }
             </style>  
         """,
