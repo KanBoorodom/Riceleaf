@@ -1,3 +1,5 @@
+from ast import arg
+from turtle import onclick
 import streamlit as st
 from streamlit_webrtc import webrtc_streamer, WebRtcMode, RTCConfiguration
 import av
@@ -9,11 +11,8 @@ from PIL import Image, ImageEnhance
 import os  
 import torch
 from yolov5.detect import run
-
+import tkinter as tk
 st.cache()
-#! Page Setup----------------------
-st.set_page_config(page_title="Rice Leaf Disease Detection",)
-
 #! RTC Configuration----------------------
 rtc_configuration = {
     'iceServers': [
@@ -37,6 +36,30 @@ if 'break_cam' not in st.session_state:
 
 if 'allow_break_cam' not in st.session_state:
     st.session_state.allow_break_cam = False
+
+if 'sidebar_state' not in st.session_state:
+    root = tk.Tk()
+    if(root.winfo_screenwidth() <= 425):
+        st.session_state.sidebar_state = 'collapsed'
+    else: st.session_state.sidebar_state = 'expanded'
+
+#! Page Setup----------------------
+st.set_page_config(
+    page_title="Rice Leaf Disease Detection",
+    initial_sidebar_state= st.session_state.get('sidebar_state')
+)
+def toggleSidebar(type:str=None):
+    print('toggle=======')
+    if type: 
+        print('========')
+        print(type)
+        print('========')
+        st.session_state.sidebar_state = type 
+    else:
+        if st.session_state.sidebar_state == 'expanded':
+            st.session_state.sidebar_state = 'collapsed'
+        else: st.session_state.sidebar_state = 'expanded'
+
 def returnLang(thai, eng, lang):
     if(lang == 'ไทย'):
          return thai
@@ -70,6 +93,7 @@ def disableBtn(uplType:str):
     if uplType == 'Video' or uplType == 'วิดีโอ' or uplType == 'กล้องเว็บแคม':
         st.session_state.disabled_btn = not st.session_state.disabled_btn 
         st.session_state.break_video = False
+    toggleSidebar('collapsed')
 
 def breakVideo(uplType:str):
     if uplType == 'Video' or uplType == 'วิดีโอ':
@@ -87,6 +111,10 @@ def main():
         """
             <style>
                 #MainMenu {visibility: hidden;}
+                .css-renyox{
+                    top:10px;
+                    right:10px;
+                }
                 .tab-subhead{
                     padding-top:0;
                     padding-bottom:5px;
@@ -144,6 +172,18 @@ def main():
                 }
                 [data-stale="false"] > .row-widget > button {width: 100%; border-color:red;}
                 .st-ic > div > div > div > p{font-size:1.8rem;}
+                [data-testid="stVerticalBlock"] div:nth-child(3) > div > div:nth-child(1){}
+                [data-testid="stVerticalBlock"] div:nth-child(3) > div > div:nth-child(2){width:100%;display:none;}
+                [data-testid="stVerticalBlock"] div:nth-child(3) > div > div:nth-child(2) div{width:initial !important;}
+                @media only screen and (max-width: 425px) {
+                    [data-testid="stAppViewContainer"] > section:first-child > div:first-child{ width:300px;}
+                    [data-testid="stVerticalBlock"] div:nth-child(3) > div > div:nth-child(2){display:initial;}
+                    section > .css-6qob1r .e1fqkh3o3{background:green !important; width:300px !important;}
+                    [data-testid="stSidebar"] .block-container
+                    {
+                        max-width:260px;
+                    }
+                }
             </style>  
         """,
         unsafe_allow_html=True
@@ -197,6 +237,13 @@ def main():
             label_visibility='collapsed',
             key="multi_select",
             disabled=st.session_state.disabled_btn
+        )
+    with st.container():
+        st.markdown(f'<h4>ข้อมูลที่ใช้ในการประมวลผล: {file_upload}</h4>', unsafe_allow_html=True) 
+        st.button('เลือกรูปแบบการประมวลผล',
+            on_click=toggleSidebar,
+            args=('expanded',),
+            disabled=st.session_state.sidebar_state == 'expanded'
         )
 
 #! Get Video------------------------------------------------------------------------------------------------------------------------
