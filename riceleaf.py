@@ -13,10 +13,13 @@ from yolov5.detect import run
 st.cache()
 #! Page Setup----------------------
 st.set_page_config(page_title="Rice Leaf Disease Detection",)
-#! Check----------------------
 
-
-#!----------------------
+#! RTC Configuration----------------------
+rtc_configuration = {
+    'iceServers': [
+        {'urls':['stun:stun.l.google.com:19302']}
+    ]
+}
 modelForImage = torch.hub.load('yolov5', 'custom', path='M.pt', _verbose=False, source='local')
 modelForWebcam = torch.hub.load('yolov5', 'custom', path='N.pt', _verbose=False, source='local')
 
@@ -287,8 +290,10 @@ def main():
             "stop": "หยุดการประมวลผล",
             "select_device": "เลือกอุปกรณ์",
         }
-        webrtc_streamer(key="webcam_process", 
+        webrtc_streamer(
+            key="webcam_process", 
             video_frame_callback=predictWebcam,
+            rtc_configuration=rtc_configuration,
             media_stream_constraints={"video": True, "audio": False},
             translations=translations,
             async_processing=True
