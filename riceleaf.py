@@ -18,7 +18,8 @@ st.set_page_config(page_title="Rice Leaf Disease Detection",)
 
 #!----------------------
 modelForImage = torch.hub.load('yolov5', 'custom', path='M.pt', _verbose=False, source='local')
-modelForWebcam = torch.hub.load('yolov5', 'custom', path='M.pt', _verbose=False, source='local')
+modelForWebcam = torch.hub.load('yolov5', 'custom', path='N.pt', _verbose=False, source='local')
+
 detectedClass = []
 detectedDict = {}
 #! State------------------------------
@@ -48,19 +49,19 @@ def predictImage(image_file, confidence, classes):
         classes=classes,
         imgsz=(640, 640)
     ) 
-
 def predictWebcam(frame):
     global detectedDict
-    img = frame.to_ndarray(format="bgr24")
-   # flipped = img[:, ::-1, :]
-   # im_pil = Image.fromarray(flipped)
-    results = modelForWebcam(img, size=640)
-    json = results.pandas().xyxy[0].to_dict(orient='list')
+    img = frame.to_rgb()
+    img = img.to_ndarray() #Converet video frame to array
+    results = modelForWebcam(img, size=(300,300))
+    bbox_img = np.array(results.render()[0])
+    return av.VideoFrame.from_ndarray(bbox_img)
+    """ 
     json = results.pandas().xyxy[0].to_dict(orient='list')
     detectedClass = json['class']
-    detectedDict = {i:detectedClass.count(i) for i in detectedClass}
+    detectedDict = {i:detectedClass.count(i) for i in detectedClass} 
     bbox_img = np.array(results.render()[0])
-    return av.VideoFrame.from_ndarray(bbox_img, format="bgr24")
+    return av.VideoFrame.from_ndarray(bbox_img, format="bgr24")"""
 
 def disableBtn(uplType:str):
     if uplType == 'Video' or uplType == 'วิดีโอ' or uplType == 'กล้องเว็บแคม':
@@ -281,9 +282,20 @@ def main():
    
 #! Get Webcam------------------------------------------------------------------------------------------------------------------------
     elif file_upload == 'Webcam Camera' or file_upload == 'กล้องเว็บแคม':
-        process_type = 'กล้องเว็บแคม'
+        translations={
+            "start": "เริ่มต้นการประมวลผล",
+            "stop": "หยุดการประมวลผล",
+            "select_device": "เลือกอุปกรณ์",
+        }
+        webrtc_streamer(key="webcam_process", 
+            video_frame_callback=predictWebcam,
+            media_stream_constraints={"video": True, "audio": False},
+            translations=translations,
+            async_processing=True
+        )
+        """ process_type = 'กล้องเว็บแคม'
         camWarningText = st.empty()
-        camWarningText.markdown(f'<h4 class="warning-webcam">เลือก "เริ่มต้นการประมวลผล" เพื่อใช้งานกล้องเว็บแคม</h4>', unsafe_allow_html=True)
+        camWarningText.markdown(f'<h4 class="warning-webcam">เลือก "เริ่มต้นการประมวลผล" เพื่อใช้งานกล้องเว็บแคม</h4>', unsafe_allow_html=True) """
         #st.write(webrtc_ctx)
         #st.write(detectedDict)
         #webrtc_streamer(key="example")
@@ -345,9 +357,10 @@ def main():
                 st.session_state['disabled_btn '] = False 
 
 #! Process Webcam Camera------------------------------------------------------------------------------------------------------------------------
-            elif file_upload == 'กล้องเว็บแคม':              
+            elif file_upload == 'กล้องเว็บแคม':                                    
                 if not st.session_state.allow_break_cam:
-                    camWarningText.empty()
+                    pass
+                    """ camWarningText.empty()
                     stopWebcam = st.button(
                         'Stop Processing Webcam...',
                         key='stop_cam',
@@ -355,27 +368,25 @@ def main():
                         args = (file_upload, ),
                         type = 'primary'
                     )
-                if len(assigned_class_id) > 0:
-                    run(
-                        weights='N.pt', 
-                        source=0, 
-                        device='cpu', 
-                        breakVideo=st.session_state.break_cam,
-                        conf_thres=confidence,
-                        classes=assigned_class_id
-                    ) 
-                else:
-                    run(
-                        weights='N.pt', 
-                        source=0, 
-                        device='cpu', 
-                        breakVideo=st.session_state.break_cam,
-                        conf_thres=confidence,
-                    ) 
-                st.session_state['disabled_btn'] = False
-                st.session_state['allow_break_cam'] = False
-                st.session_state['break_cam'] = False
-
+                    if len(assigned_class_id) > 0:
+                        run(weights='N.pt', 
+                            source=0, 
+                            device='cpu', 
+                            breakVideo=st.session_state.break_cam,
+                            conf_thres=confidence,
+                            classes=assigned_class_id
+                        ) 
+                    else:
+                        run(weights='N.pt',  
+                            source=0, 
+                            device='cpu', 
+                            breakVideo=st.session_state.break_cam,
+                            conf_thres=confidence,
+                        ) 
+                    st.session_state['disabled_btn'] = False
+                    st.session_state['allow_break_cam'] = False
+                    st.session_state['break_cam'] = False  """
+               
 #! Detected Result------------------------------------------------------------------------------------------------------------------------
         if (file_upload == 'รูปภาพ' or file_upload == 'กล้องถ่ายรูป') and (start_btn or start_cam_btn):
             with st.container():
