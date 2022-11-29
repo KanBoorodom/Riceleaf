@@ -189,8 +189,7 @@ def main():
                     }
                     [data-testid="stAppViewContainer"] > section:first-child{width:300px !important;}
                     [data-testid="stAppViewContainer"] > section:first-child > div:first-child{ width:300px;}
-                    [data-testid="stAppViewContainer"] > section:first-child > div:first-child > div:nth-child(2) > div > div > div > div:nth-child(14),
-                    [data-testid="stAppViewContainer"] > section:first-child > div:first-child > div:nth-child(2) > div > div > div > div:nth-child(12){
+                    [data-testid="stAppViewContainer"] > section:first-child > div:first-child > div:nth-child(2) > div > div > div > div:nth-last-child(2){
                         display:none;
                     }
                     [data-testid="stVerticalBlock"] div:nth-child(3) > div > div:nth-child(2){display:initial;}
