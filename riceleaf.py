@@ -222,6 +222,7 @@ def showResult(detectedDict,detectedClass, file_upload):
 
 def main():
     start_cam_btn = False
+    #!--- Styling-------------
     st.markdown(
         """
             <style>
