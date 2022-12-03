@@ -381,7 +381,7 @@ def main():
     if file_upload == 'วิดีโอ':
         process_type = 'วิดีโอ'
         video_file_buffer = st.sidebar.file_uploader(
-            'เลือก browse files หรือลากไฟล์ที่ต้องการไปที่กรอบสีดำด้านล่าง', 
+            'เลือก browse files หรือลากไฟล์ที่ต้องการไปที่กรอบ', 
             type=['mp4', 'mov', 'avi', 'asf', 'm4v'],
             #disabled=st.session_state.disabled_btn
         )
@@ -407,10 +407,10 @@ def main():
             st.sidebar.warning('คุณกำลังใช้วิดีโอตัวอย่างในการประมวลผล', icon="⚠️")
             
 #! Get Image------------------------------------------------------------------------------------------------------------------------
-    elif file_upload == 'Image' or file_upload == 'รูปภาพ':
+    elif file_upload == 'รูปภาพ':
         process_type = 'รูปภาพ'
         image_file = st.sidebar.file_uploader(
-            'เลือก browse files หรือลากไฟล์ที่ต้องการไปที่กรอบสีดำด้านล่าง', 
+            'เลือก browse files หรือลากไฟล์ที่ต้องการไปที่กรอบ', 
             type=['jpeg','jpg','png','webp'],
         )
         tffile = tempfile.NamedTemporaryFile(suffix='.jpg', delete=False)
@@ -457,32 +457,31 @@ def main():
             temp_img = open(tffile.name, 'rb')
             pilImg = Image.open(temp_img)
             image_file = temp_img.name
-            camera.image(img_capture)
-            start_cam_btn = st.button(
-                'เริ่มต้นการประมวลผล',
-                key='start_cam_btn',
-            )   
+            camera.image(img_capture)  
 #! Get Webcam------------------------------------------------------------------------------------------------------------------------
-    elif file_upload == 'Webcam Camera' or file_upload == 'กล้องเว็บแคม':
+    elif file_upload == 'กล้องเว็บแคม':
         process_type = 'กล้องเว็บแคม'
     st.sidebar.markdown('---')
 #! Process Start------------------------------------------------------------------------------------------------------------------------
     #TODO Sidebar----
-    if file_upload != 'กล้องเว็บแคม':
+    if file_upload != 'กล้องเว็บแคม' and file_upload != 'กล้องถ่ายรูป':
         start_btn = st.sidebar.button('เริ่มต้นการประมวลผล', key='process_btn')
     
     if file_upload == 'รูปภาพ' or file_upload == 'วิดีโอ':
         st.write('-----')
         emptyStartBtn = st.empty()
-        start_mobile_btn = emptyStartBtn.button('เริ่มต้นการประมวลผล',key='process_btn1')
+        start_mobile_btn = emptyStartBtn.button(
+            'เริ่มต้นการประมวลผล',
+            key='process_btn1'
+        )
     st.sidebar.markdown('''
      <a class="toggle" href="javascript:document.getElementsByClassName('css-9s5bis edgvbvh3')[1].click();" target="_self">สิ้นสุดการตั้งค่าโปรแกรม</a>
     ''', unsafe_allow_html=True)
 
 
-    if  file_upload != 'กล้องเว็บแคม' and start_btn or \
-        file_upload == 'กล้องเว็บแคม' or \
-        (file_upload == 'กล้องถ่ายรูป' and start_cam_btn) or \
+    if  file_upload == 'กล้องเว็บแคม' or \
+        (file_upload == 'กล้องถ่ายรูป' and img_capture) or \
+        (file_upload != 'กล้องถ่ายรูป' and start_btn) or \
         (file_upload != 'กล้องถ่ายรูป' and start_mobile_btn):
         with st.spinner(f'กำลังประมวลผล{process_type}...'):
 #! Process Image------------------------------------------------------------------------------------------------------------------------
@@ -528,7 +527,7 @@ def main():
 #! Process Webcam Camera------------------------------------------------------------------------------------------------------------------------
             elif file_upload == 'กล้องเว็บแคม':          
                 showStreamResult = st.sidebar.checkbox('แสดงข้อมูลโรคใบข้าวระหว่างประมวลผลด้วยกล้องเว็บแคม')
-                if showStreamResult: st.sidebar.warning('โปรดระวัง!! ข้อมูลที่แสดงผลระหว่างการประมวลผลด้วยกล้องเว็บแคมอาจมีความไม่ค่อเนื่อง', icon="⚠️")
+                if showStreamResult: st.sidebar.warning('โปรดระวัง!! ข้อมูลที่แสดงผลระหว่างการประมวลผลด้วยกล้องเว็บแคมอาจมีความไม่ต่อเนื่อง', icon="⚠️")
                 translations={
                     "start": "เริ่มต้นการประมวลผล",
                     "stop": "หยุดการประมวลผล",
@@ -559,7 +558,7 @@ def main():
                             emptyCamResult.write('no detected')
                                             
 #! Detected Result------------------------------------------------------------------------------------------------------------------------
-        if (file_upload == 'รูปภาพ' or file_upload == 'กล้องถ่ายรูป') and (start_btn or start_cam_btn or start_mobile_btn):
+        if (file_upload == 'รูปภาพ' and (start_btn or start_mobile_btn)) or (file_upload == 'กล้องถ่ายรูป' and img_capture):
             with st.container():
                 showResult(detectedDict,detectedClass, file_upload)
 if __name__ == '__main__':
