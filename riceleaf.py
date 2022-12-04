@@ -1,13 +1,9 @@
-from ast import arg
 import streamlit as st
-from streamlit_webrtc import webrtc_streamer, WebRtcMode, RTCConfiguration
+from streamlit_webrtc import webrtc_streamer
 import av
 import tempfile
-import cv2
-import pandas as pd
 import numpy as np
 from PIL import Image, ImageEnhance
-import os  
 import torch
 from yolov5.detect import run
 import queue
@@ -29,24 +25,11 @@ modelForWebcam = torch.hub.load('yolov5', 'custom', path='N.pt', _verbose=False,
 detectedClass = []
 detectedDict = {}
 #! State------------------------------
-if 'break_video' not in st.session_state:
-    st.session_state.break_video = False
+if 'use_program' not in st.session_state:
+    st.session_state.use_program = False
+if 'view_ricedata' not in st.session_state:
+    st.session_state.view_ricedata = False
 result_queue = (queue.Queue())
-def returnLang(thai, eng, lang):
-    if(lang == 'ไทย'):
-         return thai
-    else:
-        return eng
-        
-def predictImage(image_file, confidence, classes):
-    run(
-        weights='M.pt', 
-        source=image_file, 
-        device='cpu', 
-        conf_thres=confidence,
-        classes=classes,
-        imgsz=(640, 640)
-    ) 
 def predictWebcam(frame):
     global detectedDict
     img = frame.to_rgb()
@@ -61,9 +44,8 @@ def predictWebcam(frame):
     detectedDict = {i:detectedClass.count(i) for i in detectedClass} 
     bbox_img = np.array(results.render()[0])
     return av.VideoFrame.from_ndarray(bbox_img, format="bgr24")"""
-
-def showResult(detectedDict,detectedClass, file_upload):
-    if detectedDict:  
+def showResult(detectedDict='',detectedClass='', file_upload='',showDetected=True):
+    if showDetected and detectedDict:  
         with st.empty():
             with st.container():
                 st.markdown('<h4 class="h4-success">ตรวจพบโรคใบข้าว</h4>', unsafe_allow_html=True)
@@ -218,11 +200,343 @@ def showResult(detectedDict,detectedClass, file_upload):
                                     <p class="indent"><span class="bold">กำจัดวัชพืช และพืชอาศัยของเชื้อไวรัสและแมลงพาหะนำโรค</span></p>\
                                     <p class="indent"><span class="bold">ใช้สารป้องกันกำจัดแมลงพาหะ</span> ได้แก่ สารฆ่าแมลงในระยะที่แมลงเป็นตัวอ่อน เช่น ไดโนทีฟูเรน หรือ บูโพรเฟซิน หรือ อีโทเฟนพรอกซ์ ไม่ควรใช้สารฆ่าแมลงผสมกันหลายๆ ชนิด หรือใช้สารฆ่าแมลงผสมสารกำจัดโรคพืชหรือสารกำจัดวัชพืช เพราะอาจทำให้ประสิทธิภาพของสารฆ่าแมลงลดลง ไม่ใช้สารกลุ่มไพรีทรอยด์สังเคราะห์ เช่น ไซเพอร์มิทริน ไซฮาโลทริน เดลต้ามิทริน</p>'
                                 ,unsafe_allow_html=True)
-    elif not detectedClass and file_upload != 'กล้องเว็บแคม' : st.markdown('<h4 class="h4-danger">ตรวจไม่พบโรคใบข้าว</h4>', unsafe_allow_html=True)  
+    elif showDetected and not detectedClass and file_upload != 'กล้องเว็บแคม' : st.markdown('<h4 class="h4-danger">ตรวจไม่พบโรคใบข้าว</h4>', unsafe_allow_html=True)  
+    else:
+        with st.container():
+            #* เชื้อรา ------------------
+            with st.expander('เชื้อรา'):
+                tab1,tab2,tab3,tab4,tab5,tab6,tab7,tab8,tab9,tab10 = st.tabs([
+                    'โรคไหม้','โรคใบจุดสีน้ำตาล','โรคใบขีดสีน้ำตาล','โรคใบวงสีน้ำตาล','โรคกาบใบแห้ง','โรคการใบเน่า',
+                    'โรคเมล็ดด่าง','โรคถอดฝักดาบ','โรคกล้าเน่า','โรคลำต้นเน่า'
+                ])
+                #TODO โรคไหม้ ---------------------------
+                with tab1:
+                    tab1a,tab2a,tab3a,tab4a,tab5a = st.tabs(['สาเหตุของโรคและภูมิภาคที่พบ','อาการของโรค','การแพร่ระบาด','การป้องกัน','ข้อควรระวัง'])
+                    with tab1a:  
+                        st.image(Image.open('diseaseDataImage/โรคไหม้ (2).jpg').resize((300,300)))
+                        st.markdown('<h5 class="tab-subhead">สาเหตุของโรค</h5> \
+                                    <p class="indent">เชื้อรา Pyricularia oryzae.</p> \
+                                    <h5 class="tab-subhead">ภูมิภาคที่พบ</h5> \
+                                    <p class="indent">พบส่วนใหญ่ในภาคเหนือ ภาคตะวันออกเฉียงเหนือ ภาคตะวันตก และภาคใต้ พบมากในข้าวนาสวน ทั้งนาปีและนาปรัง และข้าวไร่</p>'
+                                , unsafe_allow_html=True
+                        )  
+                    with tab2a:
+                        st.markdown('<h5 class="tab-subhead">ระยะกล้า</h5> \
+                                <p class="indent">ใบมีแผลจุดสีน้ำตาลคล้ายรูปตามีสีเทาอยู่ตรงกลางแผลความกว้างของแผลประมาณ 2-5 มิลลิเมตร และความยาวประมาณ 10-15 มิลลิเมตร แผลสามารถขยายลุกลามและกระจายทั่วบริเวณใบถ้าโรครุนแรงกล้าข้าวจะแห้งฟุบตาย</p> \
+                                <h5 class="tab-subhead">ระยะแตกกอ</h5> \
+                                <p class="indent">อาการพบได้ที่ใบข้อต่อของใบ และข้อต่อของลำต้น ขนาดแผลจะใหญ่กว่าที่พบในระยะกล้าแผลลุกลามติดต่อกันได้ที่บริเวณข้อต่อ ใบจะมีลักษณะแผลช้ำสีน้ำตาลดำ และมักหลุดจากกาบใบเสมอ</p> \
+                                <h5>ระยะออกรวง</h5> \
+                                <p class="tab-subhead">ถ้าข้าวเพิ่งจะเริ่มให้รวงเมื่อถูกเชื้อราเข้าทำลายเมล็ดจะลีบหมด แต่ถ้าเป็นโรคตอนรวงข้าวแก่ใกล้เก็บเกี่ยวจะปรากฏรอยแผลช้ำสีน้ำตาลที่บริเวณคอรวง ำให้เปราะหักง่ายรวงข้าวร่วงหล่นเสียหายมาก</p> '
+                            ,unsafe_allow_html=True
+                        )
+                                            
+                    with tab3a:
+                        st.markdown('<p class="indent">พบโรคในแปลงที่ต้นข้าวหนาแน่นทำให้อับลม ถ้าอากาศค่อนข้างเย็น อุณหถูมิประมาณ 22-25 องศาเซลเซียส ลมแรงจะช่วยให้โรคแพร่กระจายได้ดี</p>',unsafe_allow_html=True)
+                    with tab4a:
+                        st.markdown('<p class="indent bold">ใช้พันธุ์ข้าวที่ค่อนข้างต้านทานโรค</p> \
+                                <p class="indent">- ภาคกลาง เช่น สุพรรณบุรี 1 สุพรรณบุรี 60 ปราจีนบุรี 1 พลายงาม ข้าวเจ้าหอมพิษณุโลก 1</p> \
+                                <p class="indent">- ภาคเหนือ และตะวันออกเฉียงเหนือ เช่น ข้าวเจ้าหอมพิษณุโลก 1 สุรินทร์ 1 เหนียวอุบล 2 สันปาตอง 1 หางยี 71 กู้เมืองหลวง ขาวโป่งไคร้ น้ำรู</p> \
+                                <p class="indent">- ภาคใต้ เช่น ดอกพะยอม</p> \
+                                <p class="indent"><span class="bold">หว่านเมล็ดพันธุ์ในอัตราที่เหมาะสม</span> คือ 15-20 กิโลกรัม/ไร่ ควรแบ่งแปลงให้มีการระบายถ่ายเทอากาศดี และไม่ควรใส่ปุ๋ยไนโตรเจนสูงเกินไป ถ้าสูงถึง 50 กิโลกรัม/ไร่ โรคไหม้จะพัฒนาอย่างรวดเร็ว</p> \
+                                <p class="indent"><span class="bold">คลุกเมล็ดพันธุ์ด้วยสารป้องกันกำจัดเชื้อรา</span> เช่น ไตรไซคลาโซล (tricyclazone) คาซูกาไมซิน (kasugamycin) คาร์เบนดาซิม (carbendazim) โพรคลอราซ ตามอัตราที่ระบุ</p> \
+                                <p class="indent"><span class="bold">ในแหล่งที่เคยมีโรคระบาดและพบแผลโรคไหม้ทั่วไป 5 เปอร์เซ็นต์ ของพื้นที่ใบ (ในภาพรวม พบเฉลี่ย 2-3 แผลต่อใบ)</span> ควรฉีดพ่นสารป้องกันกำจัดเชื้อรา เช่น ไตรไซคลาโซล (tricyclazone) คาซูกาไมซิน (kasugamycin) อีดิเฟนฟอส ไอโซโพรไทโอเลน (isoprothiolane) คาร์เบนดาซิม (carbendazim) ตามอัตราที่ระบุ</p>'
+                            ,unsafe_allow_html=True)
+                    with tab5a:
+                        st.markdown('<p class="indent"> ข้าวพันธุ์สุพรรณบุรี 1 สุพรรณบุรี 60 และชัยนาท 1 ที่ปลูกในภาคเหนือตอนล่าง พบว่าแสดงอาการรุนแรงในบางพื้นที่ และบางปี โดยเฉพาะเมื่อสภาพแวดล้อมเอื้ออำนวย เช่น ฝนพรำ หรือหมอก น้ำค้างจัด อากาศเย็น ใส่ปุ๋ยมากเกินความจำเป็น หรือเป็นดินหลังน้ำท่วม </p>',unsafe_allow_html=True)
+               
+                #TODO โรคใบจุดสีน้ำตาล ---------------------------
+                with tab2:
+                    tab1b,tab2b,tab3b,tab4b= st.tabs(['สาเหตุของโรคและภูมิภาคที่พบ','อาการของโรค','การแพร่ระบาด','การป้องกัน'])
+                    with tab1b:  
+                        st.image(Image.open('diseaseDataImage/โรคใบจุดสีน้ำตาล (1).jpeg').resize((300,300)))
+                        st.markdown('<h5 class="tab-subhead">สาเหตุของโรค</h5> \
+                                    <p class="indent">เชื้อรา Bipolaris oryzae Breda de Haan.</p> \
+                                    <h5 class="tab-subhead">ภูมิภาคที่พบ</h5> \
+                                    <p class="indent">ภาคกลาง ภาคเหนือ ภาคตะวันตก ภาคตะวันออกเฉียงเหนือ และภาคใต้ พบมากในนาน้ำฝน นาชลประทาน</p>'
+                                , unsafe_allow_html=True
+                        )  
+                    with tab2b:
+                        st.markdown('<p class="indent">แผลที่ใบข้าว พบมากในระยะแตกกอมีลักษณะเป็นจุดสีน้ำตาล รูปกลมหรือรูปไข่ ขอบนอกสุดของแผลมีสีเหลือง มีขนาดเส้นผ่าศูนย์กลาง 0.5-1 มิลลิเมตร แผลที่มีการพัฒนาเต็มที่ขนาดประมาณ 1-2 x 4-10 มิลลิเมตร บางครั้งพบแผลไม่เป็นวงกลมหรือรูปไข่ แต่จะเป็นรอยเปื้อนคล้ายสนิมกระจัดกระจายทั่วไปบนใบข้าว แผลยังสามารถเกิดบนเมล็ดข้าวเปลือก(โรคเมล็ดด่าง) บางแผลมีขนาดเล็ก บางแผลอาจใหญ่คลุมเมล็ดข้าวเปลือก ทำให้เมล็ดข้าวเปลือกสกปรก เสื่อมคุณภาพ เมื่อนำไปสีข้าวสารจะหักง่าย</p>'
+                            ,unsafe_allow_html=True
+                        )
+                                            
+                    with tab3b:
+                        st.markdown('<p class="indent">เกิดจากสปอร์ของเชื้อราปลิวไปตามลม และติดไปกับเมล็ด</p>',unsafe_allow_html=True)
+                    with tab4b:
+                        st.markdown('<p class="indent bold">ใช้พันธุ์ต้านทานที่เหมาะสมกับสภาพท้องที่ โดยเฉพาะพันธุ์ที่มีคุณสมบัติต้านทานโรคใบสีส้ม</p> \
+                                <p class="indent">- ภาคกลาง ใช้พันธุ์ปทุมธานี 1</p> \
+                                <p class="indent">- ภาคเหนือและภาคตะวันออกเฉียงเหนือ ใช้พันธุ์เหนียวสันป่าตอง และหางยี 71</p> \
+                                <p class="indent"><span class="bold">ปรับปรุงดินโดยการไถกลบฟาง หรือเพิ่มความอุดมสมบูรณ์ดินโดยการปลูกพืชปุ๋ยสด หรือปลูกพืชหมุนเวียนเพื่อช่วยลดความรุนแรงของโรค</span></p> \
+                                <p class="indent"><span class="bold">คลุกเมล็ดพันธุ์ก่อนปลูกด้วยสารป้องกันกำจัดเชื้อรา</span> เช่น แมนโคเซ็บ หรือคาร์เบนดาซิม+แมนโคเซ็บอัตรา 3 กรัม / เมล็ด 1 กิโลกรัม</p> \
+                                <p class="indent"><span class="bold">ใส่ปุ๋ยโปแตสเซียมคลอไรด์ (0-0-60) อัตรา 5-10 กิโลกรัม / ไร่ ช่วยลดความรุนแรงของโรค</span></p> \
+                                <p class="indent"><span class="bold">กำจัดวัชพืชในนา ดูแลแปลงให้สะอาด และใส่ปุ๋ยในอัตราที่เหมาะสม</span></p> \
+                                <p class="indent"><span class="bold">ถ้าพบอาการของโรคใบจุดสีน้ำตาลรุนแรงทั่วไป 10 เปอร์เซ็นต์ของพื้นที่ใบในระยะข้าวแตกกอ หรือในระยะที่ต้นข้าวตั้งท้องใกล้ออกรวง</span> เมื่อพบอาการใบจุดสีน้ำตาลที่ใบธงในสภาพฝนตกต่อเนื่อง อาจทำให้เกิดโรคเมล็ดด่าง ควรพ่นด้วยสารป้องกันกำจัดเชื้อรา เช่น  อีดิเฟนฟอส คาร์เบนดาซิม\
+                                    แมนโคเซ็บ หรือคาร์เบนดาซิม+แมนโคเซบ ตามอัตราที่ระบุ</p>'
+                        ,unsafe_allow_html=True)                                   
+                
+                #TODO โรคใบขีดสีน้ำตาล ---------------------------
+                with tab3:
+                    tab1c,tab2c,tab3c,tab4c= st.tabs(['สาเหตุของโรคและภูมิภาคที่พบ','อาการของโรค','การแพร่ระบาด','การป้องกัน'])
+                    with tab1c:  
+                        st.image(Image.open('diseaseDataImage/โรคใบขีดสีน้ำตาล.jpg').resize((300,300)))
+                        st.markdown('<h5 class="tab-subhead">สาเหตุของโรค</h5> \
+                                    <p class="indent">เชื้อรา Cercospora oryzae I. Miyake</p> \
+                                    <h5 class="tab-subhead">ภูมิภาคที่พบ</h5> \
+                                    <p class="indent">ภาคกลาง ภาคเหนือ ภาคตะวันตก ภาคตะวันออกเฉียงเหนือ และ ภาคใต้ ในนาน้ำฝน และ นาชลประทาน</p>'
+                                , unsafe_allow_html=True
+                        )  
+                    with tab2c:
+                        st.markdown('<p class="indent">ลักษณะแผลที่ใบมีสีน้ำตาลเป็นขีดๆ ขนานไปกับเส้นใบข้าว มักพบในระยะข้าวแตกกอ แผลไม่กว้าง ตรงกลางเล็กและไม่มีรอยช้ำที่แผล ต่อมาแผลจะขยายมาติดกัน แผลจะมีมากตามใบล่างและปลายใบ ใบที่เป็นโรคจะแห้งตายจากปลายใบก่อน ต้นข้าวที่เป็นโรครุนแรงจะมีแผลสีน้ำตาลที่ข้อต่อใบได้เช่นกัน เชื้อนี้สามารถเข้าทำลายคอรวงทำให้คอรวงเน่าและหักพับได้</p>'
+                            ,unsafe_allow_html=True
+                        )
+                                            
+                    with tab3c:
+                        st.markdown('<p class="indent">สปอร์ของเชื้อราสามารถปลิวไปกับลม และติดไปกับเมล็ด</p>',unsafe_allow_html=True)
+                    with tab4c:
+                        st.markdown('<p class="indent"><span class="bold">ใช้ปุ๋ยโปแตสเซียมคลอไรด์ (0-0-60) อัตรา 5-10 กิโลกรัมต่อไร่</span> สามารถช่วยลดความรุนแรงของโรคได้</p> \
+                                <p class="indent"><span class="bold">ใช้พันธุ์ต้านทานที่เหมาะสมเฉพาะท้องที่</span> เช่นภาคใต้ใช้พันธุ์แก่นจันทร์ ดอกพะยอม</p> \
+                                <p class="indent"><span class="bold">กรณีเกิดการระบาดของโรครุน</span>ให้ฉีดพ่นด้วยสารป้องกันกำจัดเชื้อรา เช่น คาร์เบ็นดาซิม</p>'
+                        ,unsafe_allow_html=True)                                   
+                
+                #TODO โรคใบวงสีน้ำตาล ---------------------------
+                with tab4:
+                    tab1d,tab2d,tab3d,tab4d= st.tabs(['สาเหตุของโรคและภูมิภาคที่พบ','อาการของโรค','การแพร่ระบาด','การป้องกัน'])
+                    with tab1d:  
+                        st.image(Image.open('diseaseDataImage/โรคใบวงสีน้ำตาล.jpeg').resize((300,300)))
+                        st.markdown('<h5 class="tab-subhead">สาเหตุของโรค</h5> \
+                                    <p class="indent">เชื้อรา Rhynocosporium oryzae Hashioka&Yokogi</p> \
+                                    <h5 class="tab-subhead">ภูมิภาคที่พบ</h5> \
+                                    <p class="indent">ภาคเหนือและภาคใต้ และ ข้าวนาสวน (นาปี) ภาคตะวันออกเฉียงเหนือ</p>'
+                                , unsafe_allow_html=True
+                        )  
+                    with tab2d:
+                        st.markdown('<p class="indent">ระยะกล้าข้าวจะแสดงอาการไหม้ที่ปลายใบและมีสีน้ำตาลเข้ม ระยะแตกกออาการส่วนใหญ่จะเกิดบนใบ แต่มักจะเกิดแผลที่ปลายใบมากกว่าบริเวณอื่นๆของใบ แผลที่เกิดบนใบในระยะแรกมีลักษณะเป็นรอยช้ำ รูปไข่ยาวๆ แผลสีน้ำตาลปนเทา ขอบแผลสีน้ำตาลอ่อน จากนั้นแผลจะขยายใหญ่ขึ้นเป็นรูปวงรีติดต่อกันทำให้เกิดอาการใบไหม้บริเวณกว้าง และเปลี่ยนเป็นสีฟางข้าว ในที่สุดแผลจะมีลักษณะเป็นวงซ้อนๆกันลุกลามเข้ามาที่โคนใบ มีผลทำให้ข้าวแห้งก่อนกำหนด</p>'
+                            ,unsafe_allow_html=True
+                        )
+                                            
+                    with tab3d:
+                        st.markdown('<p class="indent">มีพืชอาศัยของเชื้อรา เช่น หญ้าชันกาด และหญ้าขน</p>',unsafe_allow_html=True)
+                    with tab4d:
+                        st.markdown('<p class="indent"><span class="bold">กำจัดพืชอาศัยของเชื้อราสาเหตุโรค</p> \
+                                <p class="indent"><span class="bold">ใช้พันธุ์ต้านทานที่เหมาะสมเฉพาะท้องที่</span> เช่นภาคตะวันออกเฉียงเหนือใช้ หางยี 71</p> \
+                                <p class="indent"><span class="bold">ในแหล่งที่เคยมีการระบาด หรือพบโรคจำนวนมาก</span>ให้ฉีดพ่นด้วยสารป้องกันกำจัดโรคพืช เช่น ไธโอฟาเนทเมทิล โพรพิโคนาโซล ตามอัตราที่ระบุ</p>'
+                        ,unsafe_allow_html=True)                                   
+                
+                #TODO โรคกาบใบแห้ง ---------------------------
+                with tab5:
+                    tab1e,tab2e,tab3e,tab4e= st.tabs(['สาเหตุของโรคและภูมิภาคที่พบ','อาการของโรค','การแพร่ระบาด','การป้องกัน'])
+                    with tab1e:  
+                        st.image(Image.open('diseaseDataImage/โรคกาบใบแห้ง (1).jpeg').resize((300,300)))
+                        st.markdown('<h5 class="tab-subhead">สาเหตุของโรค</h5> \
+                                    <p class="indent">เชื้อรา Rhizoctonia solani (Thanatephorus cucumeris (Frank) Donk)</p> \
+                                    <h5 class="tab-subhead">ภูมิภาคที่พบ</h5> \
+                                    <p class="indent">ภาคกลาง ภาคเหนือ และ ภาคใต้ พบมาก ในนาชลประทาน</p>'
+                                , unsafe_allow_html=True
+                        )  
+                    with tab2e:
+                        
+                        st.markdown('<p class="indent">เริ่มพบโรคในระยะแตกกอจนถึงระยะใกล้เก็บเกี่ยว ยิ่งต้นข้าวมีการแตกกอมากเท่าใด ต้นข้าวก็จะเบียดเสียดกันมากขึ้น โรคก็จะเป็นรุนแรง ลักษณะแผลสีเขียวปนเทา ขนาดประมาณ 1-4 x 2-10 มิลลิเมตร ปรากฏตามกาบใบ ตรงบริเวณใกล้ระดับน้ำ แผลจะลุกลามขยายใหญ่ขึ้นจนมีขนาดไม่จำกัดและลุกลามขยายขึ้นถึงใบข้าว ถ้าเป็นพันธุ์ข้าวที่อ่อนแอ แผลสามารถลุกลามถึงใบธงและกาบหุ้มรวงข้าว ทำให้ใบและกาบใบเหี่ยวแห้ง ผลผลิตจะลดลงอย่างมากมาย</p>'
+                            ,unsafe_allow_html=True
+                        )
+                                            
+                    with tab3e:
+                        st.markdown('<p class="indent">เชื้อราสามารถสร้างเม็ดขยายพันธุ์อยู่ได้นานในตอซังหรือวัชพืชในนาตามดินนา และมีชีวิตข้ามฤดูหมุนเวียนทำลายข้าวได้ตลอดฤดูการทำนา</p>',unsafe_allow_html=True)
+                    with tab4e:
+                        st.markdown('<p class="indent"><span class="bold">หลังเก็บเกี่ยวข้าว และเริ่มฤดูใหม่</span> ควรพลิกไถหน้าดินตากแดดเพื่อทำลายเม็ดขยายพันธุ์ของเชื้อราสาเหตุโรค</p> \
+                                <p class="indent"><span class="bold">กำจัดวัชพืชตามคันนาและแหล่งน้ำ</span>เพื่อลดโอกาศการฟักตัวและเป็นแหล่งสะสมของเชื้อราสาเหตุโรค</p>\
+                                <p class="indent"><span class="bold">ใช้ชีวภัณฑ์บาซิลลัส ซับทิลิส (เชื้อแบคทีเรียปฏิปักษ์) ในอัตราที่ระบุ</span></p>\
+                                <p class="indent"><span class="bold">ใช้สารป้องกันกำจัดเชื้อรา</span>เช่น โพรพิโคนาโซล เพนไซคูรอน (25%ดับบลิวพี) หรืออีดิเฟนเฟอส ตามอัตราที่ระบุโดยพ่นสารป้องกันกำจัดเชื้อรานี้ในบริเวณที่เริ่มพบโรคระบาด ไม่จำเป็นต้องพ่นทั้งแปลง เพราะโรคกาบใบแห้งจะเกิดเป็นหย่อมๆ</p>'
+                            ,unsafe_allow_html=True)
+                
+                #TODO โรคกาบใบเน่า ---------------------------
+                with tab6:
+                    tab1e,tab2e,tab3e,tab4e= st.tabs(['สาเหตุของโรคและภูมิภาคที่พบ','อาการของโรค','การแพร่ระบาด','การป้องกัน'])
+                    with tab1e:  
+                        st.image(Image.open('diseaseDataImage/โรคกาบใบเน่า (2).jpeg').resize((300,300)))
+                        st.markdown('<h5 class="tab-subhead">สาเหตุของโรค</h5> \
+                                    <p class="indent">เชื้อรา Sarocladium oryzae Sawada</p> \
+                                    <h5 class="tab-subhead">ภูมิภาคที่พบ</h5> \
+                                    <p class="indent">ถาคกลางในนาชลประทาน</p>'
+                                , unsafe_allow_html=True
+                        )  
+                    with tab2e:
+                        st.markdown('<p class="indent">ข้าวแสดงอาการในระยะตั้งท้องโดยเกิดแผลสีน้ำตาลดำบนกาบห่อรวง ขนาดแผลประมาณ 2-7 x 4-18 มิลลิเมตร ตรงกลางแผลมีกลุ่มเส้นใยสีขาวอมชมพู แผลนี้จะขยายติดต่อกันทำให้บริเวณกาบหุ้มรวงมีสีน้ำตาลดำและรวงข้าวส่วนใหญ่โผล่ไม่พ้นกาบหุ้มรวง หรือโผล่ได้บางส่วน ทำให้เมล็ดลีบและมีสีดำ</p>'
+                            ,unsafe_allow_html=True
+                        )
+                                            
+                    with tab3e:
+                        st.markdown('<p class="indent">เชื้อรานี้ติดอยู่บนเมล็ดได้นาน นอกจากนี้ พบว่า “ไรขาว” ซึ่งอาศัยดูดกินน้ำเลี้ยงต้นข้าวในบริเวณกาบใบด้านใน สามารถเป็นพาหะช่วยทำให้โรคแพร่ระบาดได้รุนแรง และกว้างขวางยิ่งขึ้น</p>',unsafe_allow_html=True)
+                    with tab4e:
+                        st.markdown('<p class="indent"><span class="bold">ใช้สารป้องกันกำจัดเชื้อรา เช่น แมนโคเซ็บ ตามอัตราที่ระบุ</p> \
+                                <p class="indent"><span class="bold">ใช้พันธุ์ค่อนข้างต้านทานที่เหมาะสมกับสภาพท้องที่</span> เช่น กข27 สำหรับนาลุ่มมีน้ำขัง ใช้พันธุ์ข้าวที่ลำต้นสูง แตกกอน้อย</p> \
+                                <p class="indent"><span class="bold">ลดจำนวนประชากรไรขาว พาหะแพร่เชื้อ ในช่วงอากาศแห้งแล้ง ด้วยสารกำจัดไร</span>เช่น ไตรไทออน โอไมท์ ตามอัตราที่ระบุ</p>'
+                        ,unsafe_allow_html=True)                                   
+                
+                #TODO โรคเมล็ดด่าง ---------------------------
+                with tab7:
+                    tab1f,tab2f,tab3f,tab4f= st.tabs(['สาเหตุของโรคและภูมิภาคที่พบ','อาการของโรค','การแพร่ระบาด','การป้องกัน'])
+                    with tab1f:  
+                        st.image(Image.open('diseaseDataImage/โรคเมล็ดด่าง (2).jpeg').resize((300,300)))
+                        st.markdown('<h5 class="tab-subhead">สาเหตุของโรค</h5> \
+                                    <p class="indent">เชื้อรา 6 ชนิดได้แก่</p> \
+                                    <p class="indent">Curvularia lunata (Wakk) Boed.</p> \
+                                    <p class="indent">Cercospora oryzae I.Miyake.</p> \
+                                    <p class="indent">Bipolaris oryzae Breda de Haan.</p> \
+                                    <p class="indent">Fusarium semitectum Berk & Rav.</p> \
+                                    <p class="indent">Trichoconis padwickii Ganguly.</p> \
+                                    <p class="indent">Sarocladium oryzae Sawada.</p> \
+                                    <h5 class="tab-subhead">ภูมิภาคที่พบ</h5> \
+                                    <p class="indent">ภาคกลาง ภาคตะวันตก ภาคเหนือ ภาคตะวันออกเฉียงเหนือ และ ภาคใต้ ในนาชลประทาน</p>'
+                                , unsafe_allow_html=True
+                        )  
+                    with tab2f:
+                        st.markdown('<p class="indent">ในระยะออกรวง พบแผลสีต่างๆ เช่นเป็นจุดสีน้ำตาลหรือดำหรือมีลายสีน้ำตาลดำหรือสีเทาปนชมพูที่เมล็ดบนรวงข้าว ทั้งนี้เพราะมีเชื้อราหลายชนิดที่สามารถเข้าทำลายและทำให้เกิดอาการต่างกันไป การเข้าทำลายของเชื้อรามักจะเกิดในช่วงดอกข้าวเริ่มโผล่จากกาบหุ้มรวงจนถึงระยะเมล็ดข้าวเริ่มเป็นน้ำนม และอาการเมล็ดด่าง จะปรากฏเด่นชัดในระยะใกล้เก็บเกี่ยว</p>'
+                            ,unsafe_allow_html=True
+                        )
+                                            
+                    with tab3f:
+                        st.markdown('<p class="indent">เชื้อราสามารถแพร่กระจายไปกับลม ติดไปกับเมล็ด และสามารถแพร่กระจายในยุ้งฉางได้</p>',unsafe_allow_html=True)
+                    with tab4f:
+                        st.markdown('<p class="indent"><span class="bold">คัดเลือกเมล็ดพันธ์ที่ปราศจากโรคมาใช้ในการปลูกข้าว</p> \
+                                <p class="indent"><span class="bold">เฝ้าระวังการเกิดโรคหากปลูกข้าวพันธ์ุที่อ่อนแอต่อโรคนี้</span> เช่น สุพรรณบุรี 60,สุพรรณบุรี 90,พิษณุโลก 2 และข้าวเจ้าหอมคลองหลวง 1</p> \
+                                <p class="indent"><span class="bold">คลุกเมล็ดพันธุ์ด้วยสารป้องกันกำจัดเชื้อร</span> เช่น แมนโคเซบ ในอัตรา 3 กรัม /เมล็ดพันธุ์ 1 กิโลกรัม</p> \
+                                <p class="indent"><span class="bold">ในระยะที่ข้าวตั้งท้องใกล้ออกรวง</span>ถ้าพบการระบาดของโรคใบจุดสีน้ำตาลที่ใบธง และโรคกาบใบเน่า ถ้ามีฝนตกชุกควรวางมาตราการป้องกันโดยพ่นสารป้องกันกำจัดเชื้อราเช่น โพรพิโคนาโซล+ไดฟีโนโคนาโซล หรือ โพรพิโคนาโซล+โพรคลอราซ</p>'
+                        ,unsafe_allow_html=True)                                   
 
+                #TODO โรคถอดฝักดาบ ---------------------------
+                with tab8:
+                    tab1g,tab2g,tab3g,tab4g= st.tabs(['สาเหตุของโรคและภูมิภาคที่พบ','อาการของโรค','การแพร่ระบาด','การป้องกัน'])
+                    with tab1g:  
+                        st.image(Image.open('diseaseDataImage/Bakanae Disease.jpg').resize((300,300)))
+                        st.markdown('<h5 class="tab-subhead">สาเหตุของโรค</h5> \
+                                    <p class="indent">เชื้อรา Fusarium fujikuroi Nirenberg</p> \
+                                    <h5 class="tab-subhead">ภูมิภาคที่พบ</h5> \
+                                    <p class="indent">พบทั่วทุกภาคของประเทศไทย</p>'
+                                , unsafe_allow_html=True
+                        )  
+                    with tab2g:
+                        st.markdown('<p class="indent">พบโรคในระยะกล้าถ้าอาการรุนแรงต้นกล้าจะแห้งตายหลังปลูกได้ไม่เกิน 7 วัน แต่มักพบกับข้าวอายุเกิน 15 วัน ระยะเริ่มแตกกอ ข้าวเป็นโรคจะต้นผอมสูงเด่นกว่ากล้าข้าวโดยทั่ว ๆ ไป ต้นข้าวผอมมีสีเขียวอ่อนซีด มักย่างปล้อง บางกรณีข้าวจะไม่ย่างปล้อง แต่รากจะเน่าช้ำเวลาถอนมักจะขาดตรงบริเวณโคนต้น หากไม่รุนแรงอาการจะแสดงหลังจากย้ายไปปักดำได้ 15-45 วัน โดยที่ต้นเป็นโรคจะสูงกว่าข้าวปกติ ใบมีสีเขียวซีด เกิดรากแขนงที่ข้อลำต้นตรงระดับน้ำ บางครั้งพบกลุ่มเส้นใยสีชมพูตรงบริเวณข้อที่ย่างปล้องขึ้นมา ต้นข้าวที่เป็นโรคมักจะตายและมีน้อยมากที่อยู่รอดจนถึงออกรวง</p>'
+                            ,unsafe_allow_html=True
+                        )
+                                            
+                    with tab3g:
+                        st.markdown('<p class="indent">เชื้อราจะติดไปกับเมล็ด สามารถมีชีวิตในซากต้นข้าวและในดินได้เป็นเวลาหลายเดือนพบว่า หญ้าชันกาด เป็นพืชอาศัยของโรค</p>',unsafe_allow_html=True)
+                    with tab4g:
+                        st.markdown('<p class="indent"><span class="bold">หลีกเลี่ยงการนำเมล็ดพันธุ์จากแหล่งที่เคยเป็นโรคระบาดมาปลูก</p> \
+                                <p class="indent"><span class="bold">คลุกเมล็ดพันธุ์ข้าวด้วยสารป้องกันกำจัดเชื้อรา</span> เช่น แมนโคเซ็บ อัตรา 3 กรัมต่อเมล็ด 1 กิโลกรัม หรือแช่เมล็ดข้าวเปลือกก่อนหุ้มข้าวให้งอกก่อนปลูก ด้วยสารละลายของสารป้องกันกำจัดเชื้อราดังกล่าวในอัตรา 30 กรัมต่อน้ำ 20 ลิตร หรือแช่เมล็ดข้าวในสารละลายโซเดียมคลอโรไฮโปคลอไรท์ (คลอร็อกซ์)ความเข้มข้น 5 เปอร์เซ็นต์หรือ คลอร็อกซ์ อัตรา 1 : น้ำ 9 ส่วน</p> \
+                                <p class="indent"><span class="bold">คลุกเมล็ดพันธุ์ด้วยสารป้องกันกำจัดเชื้อร</span> เช่น แมนโคเซบ ในอัตรา 3 กรัม /เมล็ดพันธุ์ 1 กิโลกรัม</p> \
+                                <p class="indent"><span class="bold">ควรกำจัดต้นข้าวที่เป็นโรคโดยการถอนและเผาทิ้ง เนื่องจากสปอร์ของเชื้อราสามารถปลิวไปตกบนรวงข้าวอื่น</p>'
+                        ,unsafe_allow_html=True)                                   
+                
+                #TODO โรคกล้าเน่า ---------------------------
+                with tab9:
+                    tab1i,tab2i,tab3i,tab4i= st.tabs(['สาเหตุของโรคและภูมิภาคที่พบ','อาการของโรค','การแพร่ระบาด','การป้องกัน'])
+                    with tab1i:  
+                        st.image(Image.open('diseaseDataImage/seedling rot2.jpg').resize((300,300)))
+                        st.markdown('<h5 class="tab-subhead">สาเหตุของโรค</h5> \
+                                    <p class="indent">เชื้อรา Curvularia lunata (Wakk.) Board.</p> \
+                                    <p class="indent">พบมากในกระบะตกกล้าที่ใช้กับรถปักดำ ในพื้นที่ที่ใช้เครื่องปักดำข้าว</p>'
+                                , unsafe_allow_html=True
+                        )  
+                    with tab2i:
+                        st.markdown('<p class="indent">เริ่มพบอาการได้ในระยะหลังจากการตกกล้าข้าวในกระบะเพาะโดยจะเริ่มพบเมล็ดข้าวบางส่วนที่เพาะไม่งอกและมีเส้นใยของเชื้อราปกคลุม  ส่วนเมล็ดที่งอกต้นกล้าจะมีการเจริญเติบโตช้ากว่าต้นกล้าข้าวปกติ และเมื่อถอนต้นกล้าข้าวขึ้นมาดู ก็จะพบส่วนรากและโคนต้นกล้ามีแผลสีน้ำตาล และแผลที่เกิดบนโคนต้นจะลุกลามขึ้นไปยังส่วนบนของต้นกล้า  ต่อจากนั้นจะทำให้ต้นกล้าเน่าตาย ในขณะเดียวกันเชื้อราสาเหตุของโรคจะขยายจากจุดเริ่มต้นที่เป็นโรคออกไปบริเวณโดยรอบไปยังต้นกล้าข้างเคียง โดยในกรณีที่มีการตกกล้าที่หนาแน่นเชื้อราสาเหตุของโรคสามารถแพร่กระจายไปยังส่วนอื่นๆของกระบะเพาะได้อย่างรวดเร็ว ต่อจากนี้ก็จะพบอาการตายของต้นกล้าข้าวเป็นหย่อมๆ  กรณีที่เป็นโรคในกระบะกล้ารุนแรงทำให้ไม่สามารถนำต้นกล้าข้าวนั้นไปใช้ปักดำได้</p>'
+                            ,unsafe_allow_html=True
+                        )
+                    with tab3i:
+                        st.markdown('<p class="indent">โดยการใช้เมล็ดพันธุ์ที่เป็นโรคเมล็ดด่างมาทำการตกกล้า</p>',unsafe_allow_html=True)
+                    with tab4i:
+                        st.markdown('<p class="indent"><span class="bold">ไม่ควรใช้เมล็ดพันธุ์จากแปลงที่มีการระบาดของโรคเมล็ดด่างมาก่อน</span></p> \
+                                <p class="indent"><span class="bold">คลุกเมล็ดพันธุ์ก่อนปลูกด้วยสารป้องกันกำจัดโรคพืช</span> เช่น คาร์เบนดาซิม + แมนโคเซบ ในอัตรา 3 กรัมต่อเมล็ดพันธุ์ 1 กิโลกรัม</p> \
+                                <p class="indent"><span class="bold">ล้างทำความสะอาดกระบะเพาะกล้าหลังใช้ด้วยน้ำยาฆ่าเชื้อ</span></p> \
+                                <p class="indent"><span class="bold">เผาทำลายต้นกล้าข้าวที่เป็นโรคเน่าตายในกระบะเพาะ</span></p>'
+                            ,unsafe_allow_html=True)   
+
+                #TODO โรคลำต้นเน่า ---------------------------
+                with tab10:
+                    tab1j,tab2j,tab3j,tab4j= st.tabs(['สาเหตุของโรคและภูมิภาคที่พบ','อาการของโรค','การแพร่ระบาด','การป้องกัน'])
+                    with tab1j:  
+                        st.image(Image.open('diseaseDataImage/โรคลำต้นเน่า.jpg').resize((300,300)))
+                        st.markdown('<h5 class="tab-subhead">สาเหตุของโรค</h5> \
+                                    <p class="indent">เชื้อรา Curvularia lunata (Wakk.) Board.</p> \
+                                    <h5 class="tab-subhead">ภูมิภาคที่พบ</h5> \
+                                    <p class="indent">ภาคกลาง ภาคเหนือ ภาคตะวันออกเฉียงเหนือ  และภาคใต้ ในนาน้ำฝน และนาชลประทา</p>'
+                                , unsafe_allow_html=True
+                        )  
+                    with tab2j:
+                        st.markdown('<p class="indent">เริ่มพบอาการได้ในระยะต้นข้าวก่อนออกรวงหรือหลังออกรวงแล้ว โดยจะพบแผลเป็นจุดสีน้ำตาลดำใกล้ระดับน้ำและแผลจะขยายใหญ่ขึ้นและลงตามกาบใบของต้นข้าว และในขณะเดียวกันภายในลำต้นก็จะมีแผลมีลักษณะเป็นขีดสีน้ำตาล เมื่อต้นข้าวเป็นโรครุนแรง ใบล่างของต้นข้าวเปลี่ยนเป็นสีเหลือง ส่วนของกาบใบและลำต้นจะเน่า ต้นข้าวล้มง่ายและเมื่อดึงต้นข้าวก็จะหลุดออกจากกอได้ง่าย ต้นข้าวจะตายก่อนออกรวง แต่ถ้ามีการระบาดของโรคไม่รุนแรงหรือโรคเกิดขึ้นในระยะต้นข้าวหลังออกรวงแล้ว จะมีผลทำให้ผลผลิตของข้าวลดลงได้ และเมื่อต้นข้าวเป็นโรคและแห้งตายก็จะพบเม็ดขยายพันธุ์ของเชื้อราสาเหตุของโรคมีสีดำฝังอยู่ในเนื้อเยื่อของกาบใบและตามปล้องของต้นข้าว เม็ดขยายพันธุ์ของเชื้อราสาเหตุของโรคสามารถตกค้างอยู่บนตอซังข้าวและในดินได้เป็นระยะเวลานาน</p>'
+                            ,unsafe_allow_html=True
+                        )
+                    with tab3j:
+                        st.markdown('<p class="indent">เนื่องจากเชื้อราสาเหตุจะสร้างเม็ดขยายพันธุ์ที่ตกค้างอยู่ในตอซังข้าวและดิน ในขณะเดียวกันก็สามารถลอยอยู่บนผิวน้ำและแพร่กระจายไปกับน้ำในนาข้าวได้เช่นกัน</p>',unsafe_allow_html=True)
+                    with tab4j:
+                        st.markdown('<p class="indent"><span class="bold">ไม่ควรใส่ปุ๋ยไนโตรเจนสูงในแปลงที่เป็นโรค </span></p> \
+                                <p class="indent"><span class="bold">หลังเก็บเกี่ยวข้าว และเริ่มฤดูใหม่ ควรพลิกไถหน้าดิน</span>เพื่อทำลายเม็ดขยายพันธุ์ของเชื้อรา เก็บทำลายซากพืชที่เป็นโรคออกจากแปลง</p> \
+                                <p class="indent"><span class="bold">หมั่นตรวจแปลงอย่างสม่ำเสมอ</span>เมื่อเริ่มพบโรคพ่นด้วยสารป้องกันกำจัดโรคพืช เช่น พีซีเอ็นบี คาร์บ๊อกซิน วาลิดามัยซิน</p>'
+                            ,unsafe_allow_html=True)   
+                #--------------------------------------------------
+
+            #* เชื้อแบคทีเรีย ------------------
+            with st.expander('เชื้อแบคทีเรีย'):
+                tab1k,tab2k = st.tabs([
+                    'โรคใบขีดโปร่งแสง','โรคขอบใบแห้ง'
+                ])
+                #TODO โรคใบขีดโปร่งแสง ---------------------------
+                with tab1k:
+                    tab1m,tab2m,tab3m,tab4m= st.tabs(['สาเหตุของโรคและภูมิภาคที่พบ','อาการของโรค','การแพร่ระบาด','การป้องกัน'])
+                    with tab1m:  
+                        st.image(Image.open('diseaseDataImage/โรคขอบใบแห้ง.jpg').resize((300,300)))
+                        st.markdown('<h5 class="tab-subhead">สาเหตุของโรค</h5> \
+                                    <p class="indent">เชื้อแบคทีเรีย Xanthomonas oryzae pv. oryzicola (Fang et al.) Swings et al.</p> \
+                                    <h5 class="tab-subhead">ภูมิภาคที่พบ</h5> \
+                                    <p class="indent">ภาคกลาง ภาคตะวันออกเฉียงเหนือ และ ภาคใต้ พบมากในนาน้ำฝน นาชลประทาน</p>'
+                                , unsafe_allow_html=True
+                        )  
+                    with tab2m:
+                        st.markdown('<p class="indent">โรคนี้เป็นได้ตั้งแต่ระยะข้าวแตกกอจนถึงออกรวง อาการปรากฏที่ใบ เริ่มแรกเห็นเป็นขีดช้ำยาวไปตามเส้นใบ ต่อมาค่อยๆ เปลี่ยนเป็นสีเหลืองหรือส้ม เมื่อแผลขยายรวมกันก็จะเป็นแผลใหญ่ แสงสามารถทะลุผ่านได้ และพบแบคทีเรียในรูปหยดน้ำสีเหลืองคล้ายยางสนกลมๆ ขนาดเล็กเท่าหัวเข็มหมุดปรากฏอยู่บนแผล ความยาวของแผลขึ้นอยู่กับความต้านทานของพันธุ์ข้าว และความรุนแรงของเชื้อ ในพันธุ์ที่อ่อนแอต่อโรค แผลจะขยายจนใบไหม้ไปถึงกาบใบ ลักษณะของแผลจะคล้ายคลึงกับเกิดบนใบ ส่วนในพันธุ์ต้านทาน จำนวนแผลจะน้อยและแผลจะไม่ขยายตามความยาวของใบ รอบๆ แผลจะมีสีน้ำตาลดำ</p>'
+                            ,unsafe_allow_html=True
+                        )
+                                            
+                    with tab3m:
+                        st.markdown('<p class="indent">สภาพที่มีฝนตก ลมพัดแรง จะช่วยให้โรคแพร่ระบาดอย่างกว้างขวางรวดเร็ว</p>',unsafe_allow_html=True)
+                    with tab4m:
+                        st.markdown('<p class="indent"><span class="bold">ในดินที่อุดมสมบูรณ์ไม่ควรใส่ปุ๋ยไนโตรเจนมาก</span></p> \
+                                <p class="indent"><span class="bold">ไม่ควรปลูกข้าวแน่นเกินไปและอย่าให้ระดับน้ำในนาสูงเกินควร</span></p>'
+                            ,unsafe_allow_html=True)   
+                    
+                #TODO โรคขอบใบแห้ง ---------------------------
+                with tab2k:
+                    tab1l,tab2l,tab3l,tab4l= st.tabs(['สาเหตุของโรคและภูมิภาคที่พบ','อาการของโรค','การแพร่ระบาด','การป้องกัน'])
+                    with tab1l:  
+                        st.image(Image.open('diseaseDataImage/โรคขอบใบแห้ง.jpg').resize((300,300)))
+                        st.markdown('<h5 class="tab-subhead">สาเหตุของโรค</h5> \
+                                    <p class="indent">เชื้อแบคทีเรีย Xanthomonas oryzae pv. oryzae (ex Ishiyama) Swings et al.</p> \
+                                    <h5 class="tab-subhead">ภูมิภาคที่พบ</h5> \
+                                    <p class="indent">ภาคเหนือ ภาคตะวันออกเฉียงเหนือ และภาคใต้ พบมากในนาน้ำฝน นาชลประทาน</p>'
+                                , unsafe_allow_html=True
+                        )  
+                    with tab2l:
+                        st.markdown('<p class="indent">โรคนี้เป็นได้ตั้งแต่ระยะกล้า แตกกอ จนถึง ออกรวง ต้นกล้าก่อนนำไปปักดำจะมีจุดเล็กๆลักษณะช้ำที่ขอบใบของใบล่าง ต่อมาประมาณ 7-10 วัน จุดช้ำนี้จะขยายกลายเป็นทางสีเหลืองยาวตามใบข้าว ใบที่เป็นโรคจะแห้งเร็ว และสีเขียวจะจางลงเป็นสีเทาๆ อาการในระยะปักดำจะแสดงหลังปักดำแล้วหนึ่งเดือนถึงเดือนครึ่ง ใบที่เป็นโรคขอบใบมีรอยขีดช้ำ ต่อมาจะเปลี่ยนเป็นสีเหลือง ที่แผลมีหยดน้ำสีครีมคล้ายยางสนกลมๆขนาดเล็กเท่าหัวเข็มหมุด ต่อมาจะกลายเป็นสีน้ำตาลและหลุดไปตามลม น้ำหรือฝน ซึ่งจะทำให้โรคสามารถระบาดต่อไปได้ แผลจะขยายไปตามความยาวของใบ บางครั้งขยายเข้าไปข้างในตามความกว้างของใบ ขอบแผลมีลักษณะเป็นขอบลายหยัก แผลนี้เมื่อนานไปจะเปลี่ยนเป็นสีเทา ใบที่เป็นโรคขอบใบจะแห้งและม้วนตามความยาว ในกรณีที่ต้นข้าวมีความอ่อนแอต่อโรคและเชื้อโรคมีปริมาณมากเชื้อจะทำให้ท่อน้ำท่ออาหารอุดตัน ต้นข้าวจะเหี่ยวเฉาและแห้งตายทั้งต้นโดยรวดเร็ว เรียกอาการของโรคนี้ว่า ครีเสก (kresek)</p>'
+                            ,unsafe_allow_html=True
+                        )
+                                            
+                    with tab3l:
+                        st.markdown('<p class="indent">เชื้อสาเหตุโรคสามารถแพร่ไปกับน้ำ ในสภาพแวดล้อมที่มีความชื้นสูง และสภาพที่มีฝนตก ลมพัดแรง จะช่วยให้โรคแพร่ระบาดอย่างกว้างขวางรวดเร็ว</p>',unsafe_allow_html=True)
+                    with tab4l:
+                        st.markdown('<p class="indent"><span class="bold">ใช้พันธุ์ข้าวที่ต้านทาน เช่น พันธุ์สุพรรณบุรี 60 สุพรรณบุรี 90 สุพรรณบุรี 1 สุพรรณบุรี 2 และ กข23</span></p> \
+                                <p class="indent"><span class="bold">ในดินที่อุดมสมบูรณ์ไม่ควรใส่ปุ๋ยไนโตรเจนมาก</span></p> \
+                                <p class="indent"><span class="bold">ไม่ควรระบายน้ำจากแปลงที่เป็นโรคไปสู่แปลงอื่น</span></p> \
+                                <p class="indent"><span class="bold">ควรเฝ้าระวังการเกิดโรคถ้าปลูกข้าวพันธุ์ที่อ่อนแอต่อโรคนี้</span>เช่น พันธุ์ขาวดอกมะลิ 105 กข6 เหนียวสันป่าตอง พิษณุโลก 2  ชัยนาท 1 เมื่อเริ่มพบอาการของโรคบนใบข้าวให้ใช้สารป้องกันกำจัดโรคพืช เช่น ไอโซโพรไทโอเลน คอปเปอร์ไฮดรอกไซด์ เสตร็พโตมัยซินซัลเฟต+ออกซีเตทตราไซคลินไฮโดรคลอร์ไรด์ ไตรเบซิคคอปเปอร์ซัลเฟต</p>'
+                            ,unsafe_allow_html=True)   
+
+            #* เชื้อไวรัส ------------------
+def chooseUseProgram():
+    st.session_state.use_program = True
+    st.session_state.view_ricedata = False
+def chooseViewRicedata():
+    st.session_state.use_program = False
+    st.session_state.view_ricedata = True
 def main():
-    start_cam_btn = False
-    #!--- Styling-------------
+#!---- Styling-------------
     st.markdown(
         """
             <style>
@@ -302,6 +616,10 @@ def main():
                 }
                 [data-testid="stSidebar"] > div > div:nth-child(2) > div > div > div > div:last-child(1){display:initial}
                 [tabindex="0"] > div > div > div > div:nth-last-child(1){}
+                [tabindex="0"] > div:first-child{ margin:auto; }
+                [tabindex="0"] > footer{ margin:auto; }
+                [tabindex="0"]+div > div > div > div > div > div > div > div{flex-wrap:wrap;}
+                [tabindex="0"]+div > div > div > div > div > div > div > div > [data-baseweb="tab-highlight"]{display:none;}
                 @media only screen and (max-width: 425px) {
                     .toggle{
                         width:100%;
@@ -343,225 +661,221 @@ def main():
     diseaseName = ['โรคใบไหม้','โรคขอบใบแห้ง','โรคใบจุดสีน้ำตาล','โรคกาบใบแห้ง','โรคใบสีส้ม']
     inputOption = ('รูปภาพ', 'วิดีโอ', 'กล้องถ่ายรูป','กล้องเว็บแคม')
     st.title('โปรแกรมตรวจสอบโรคใบข้าวด้วย YOLOV5')
-    st.markdown('''
-     <a class="toggle" href="javascript:document.getElementsByClassName('css-9s5bis edgvbvh3')[1].click();" target="_self">ตั้งค่าโปรแกรม</a>
-    ''', unsafe_allow_html=True)
-    st.sidebar.markdown(f'<h4 class="option">ตั้งค่าโปรแกรม</h4>', unsafe_allow_html=True) 
-#! Get Confidence------------------------------------------------------------------------------------------------------------------------
-    st.sidebar.header('ค่าความเชื่อมั่น')
-    confidence = st.sidebar.slider(
-        'เลือกค่าความเชื่อมั่นที่ต้องการ',
-        min_value = 0.0, max_value = 1.0, value = 0.25,
-        #disabled=st.session_state.disabled_btn    
-    )
-    modelForImage.conf = confidence
-    modelForWebcam.conf = confidence
-#! Get Specific Class------------------------------------------------------------------------------------------------------------------------        
-    custom_classes = st.sidebar.checkbox('เลือกคลาสเฉพาะ')
-    assigned_class_id = []
-    if custom_classes:
-        assigned_class = st.sidebar.multiselect('เลือกโรคใบข้าวที่ต้องการให้ประมวลผล', list(diseaseName),default='โรคใบจุดสีน้ำตาล')
-        for each in assigned_class:
-            assigned_class_id.append(diseaseName.index(each))
-        if(len(assigned_class_id)):
-            modelForImage.classes = assigned_class_id
-    st.sidebar.markdown('---')
-
-#! Get Input Type------------------------------------------------------------------------------------------------------------------------
-    st.sidebar.header('ประเภทข้อมูลที่ต้องการประมวลผล')
-    file_upload = st.sidebar.radio(
-            label='',
-            options=inputOption,
-            index=0,
-            label_visibility='collapsed',
-            key="multi_select",
-            #disabled=st.session_state.disabled_btn
+    if not st.session_state.use_program and not st.session_state.view_ricedata: #TODO default when start program -----
+        st.button('ใช้โปรแกรมประมวลผลโรคใบข้าว', on_click=chooseUseProgram)
+        st.button('ดูข้อมูลโรคใบข้าว', on_click=chooseViewRicedata)
+    elif not st.session_state.use_program:
+        st.button('ใช้โปรแกรมประมวลผลโรคใบข้าว', on_click=chooseUseProgram)
+        st.header('ข้อมูลโรคใบข้าว(แบ่งตามหมวดหมู่สาเหตุการเกิดโรค)')
+    elif not st.session_state.view_ricedata:
+        st.button('ดูข้อมูลโรคใบข้าว', on_click=chooseViewRicedata)
+    if st.session_state.use_program:
+        st.markdown('''
+        <a class="toggle" href="javascript:document.getElementsByClassName('css-9s5bis edgvbvh3')[1].click();" target="_self">ตั้งค่าโปรแกรม</a>
+        ''', unsafe_allow_html=True)
+        st.sidebar.markdown(f'<h4 class="option">ตั้งค่าโปรแกรม</h4>', unsafe_allow_html=True) 
+        #! Get Confidence------------------------------------------------------------------------------------------------------------------------
+        st.sidebar.header('ค่าความเชื่อมั่น')
+        confidence = st.sidebar.slider(
+            'เลือกค่าความเชื่อมั่นที่ต้องการ',
+            min_value = 0.0, max_value = 1.0, value = 0.25,
         )
+        modelForImage.conf = confidence
+        modelForWebcam.conf = confidence
 
-#! Get Video------------------------------------------------------------------------------------------------------------------------
-    if file_upload == 'วิดีโอ':
-        process_type = 'วิดีโอ'
-        video_file_buffer = st.sidebar.file_uploader(
-            'เลือก browse files หรือลากไฟล์ที่ต้องการไปที่กรอบ', 
-            type=['mp4', 'mov', 'avi', 'asf', 'm4v'],
-            #disabled=st.session_state.disabled_btn
-        )
-        tffile = tempfile.NamedTemporaryFile(suffix='.mp4', delete=False)
-        if not video_file_buffer:
-            demo_video = 'testBS.mov'
-            #vid = cv2.VideoCapture(demo_video)
-            st_video = open(demo_video, 'rb')
-            video_path = st_video.name
-            use_demo_vid = True
+        #! Get Specific Class------------------------------------------------------------------------------------------------------------------------        
+        custom_classes = st.sidebar.checkbox('เลือกคลาสเฉพาะ')
+        assigned_class_id = []
+        if custom_classes:
+            assigned_class = st.sidebar.multiselect('เลือกโรคใบข้าวที่ต้องการให้ประมวลผล', list(diseaseName),default='โรคใบจุดสีน้ำตาล')
+            for each in assigned_class:
+                assigned_class_id.append(diseaseName.index(each))
+            if(len(assigned_class_id)):
+                modelForImage.classes = assigned_class_id
+        st.sidebar.markdown('---')
 
-            #imgpath = os.path.join('data/uploads', 'testBS.mov')
-            #outputpath = os.path.join('data/video_output', os.path.basename(imgpath))
-        else:
-            tffile.write(video_file_buffer.read())
-            st_video = open(tffile.name, 'rb')
-            video_path = st_video.name
-            use_demo_vid = False
-        emptyVideo = st.empty()
-        st.sidebar.video(st_video)
-        emptyVideo.video(st_video)
-        if use_demo_vid:
-            st.sidebar.warning('คุณกำลังใช้วิดีโอตัวอย่างในการประมวลผล', icon="⚠️")
-            
-#! Get Image------------------------------------------------------------------------------------------------------------------------
-    elif file_upload == 'รูปภาพ':
-        process_type = 'รูปภาพ'
-        image_file = st.sidebar.file_uploader(
-            'เลือก browse files หรือลากไฟล์ที่ต้องการไปที่กรอบ', 
-            type=['jpeg','jpg','png','webp'],
-        )
-        tffile = tempfile.NamedTemporaryFile(suffix='.jpg', delete=False)
-        if not image_file: 
-            image_file = Image.open('testBS.jpg')
-            pilImg = image_file
-            image_file = image_file.filename
-            use_demo_img = True
-        else: 
-            tffile.write(image_file.read())
-            temp_img = open(tffile.name, 'rb')
-            pilImg = Image.open(temp_img)
-            image_file = temp_img.name
-            use_demo_img = False
-        st.sidebar.header('รูปแบบของรูปภาพ','Enhancing Image')
-        enhance_type = st.sidebar.radio('', 
-            ['Original','Contrast','Brightness'],
-            label_visibility='collapsed'
-        )
-        if enhance_type == 'Contrast':
-            c_rate = st.sidebar.slider('Contrast',0.5,3.5, value=1.0)
-            st.sidebar.error('** การปรับค่ารูปแบบของรูปภาพอาจส่งผลต่อความแม่นยำในการประมวลผลได้')
-            enhancer = ImageEnhance.Contrast(pilImg)
-            image_file = enhancer.enhance(c_rate)
-        if enhance_type == 'Brightness':
-            b_rate = st.sidebar.slider('Brightness',0.5,3.5, value=1.0)
-            st.sidebar.error('** การปรับค่าความสว่างของรูปภาพอาจส่งผลต่อความแม่นยำในการประมวลผลได้')
-            enhancer = ImageEnhance.Brightness(pilImg)
-            image_file = enhancer.enhance(b_rate)
-        if use_demo_img:
-            st.sidebar.warning('คุณกำลังใช้ภาพตัวอย่างในการประมวลผล', icon="⚠️")
-        st.sidebar.image(image_file)
-        showImage = st.empty()
-        showImage.image(image_file)
+        #! Get Input Type------------------------------------------------------------------------------------------------------------------------
+        st.sidebar.header('ประเภทข้อมูลที่ต้องการประมวลผล')
+        file_upload = st.sidebar.radio(
+                label='',
+                options=inputOption,
+                index=0,
+                label_visibility='collapsed',
+                key="multi_select",
+            )
 
-#! Get Webcam Image Capture------------------------------------------------------------------------------------------------------------------------
-    elif file_upload == 'กล้องถ่ายรูป':
-        camera = st.empty()
-        img_capture = camera.camera_input("เลือก 'Take Photo' เพื่อถ่ายรูปที่ต้องการใช้สำหรับการประมวลผล", label_visibility='collapsed')
-        if img_capture:
-            process_type = 'กล้องถ่ายรูป'
+        #! Get Video------------------------------------------------------------------------------------------------------------------------
+        if file_upload == 'วิดีโอ':
+            process_type = 'วิดีโอ'
+            video_file_buffer = st.sidebar.file_uploader(
+                'เลือก browse files หรือลากไฟล์ที่ต้องการไปที่กรอบด้านล่าง', 
+                type=['mp4', 'mov', 'avi', 'asf', 'm4v'],
+            )
             tffile = tempfile.NamedTemporaryFile(suffix='.mp4', delete=False)
-            tffile.write(img_capture.read())
-            temp_img = open(tffile.name, 'rb')
-            pilImg = Image.open(temp_img)
-            image_file = temp_img.name
-            camera.image(img_capture)  
-#! Get Webcam------------------------------------------------------------------------------------------------------------------------
-    elif file_upload == 'กล้องเว็บแคม':
-        process_type = 'กล้องเว็บแคม'
-    st.sidebar.markdown('---')
-#! Process Start------------------------------------------------------------------------------------------------------------------------
-    #TODO Sidebar----
-    if file_upload != 'กล้องเว็บแคม' and file_upload != 'กล้องถ่ายรูป':
-        start_btn = st.sidebar.button('เริ่มต้นการประมวลผล', key='process_btn')
-    
-    if file_upload == 'รูปภาพ' or file_upload == 'วิดีโอ':
-        st.write('-----')
-        emptyStartBtn = st.empty()
-        start_mobile_btn = emptyStartBtn.button(
-            'เริ่มต้นการประมวลผล',
-            key='process_btn1'
-        )
-    st.sidebar.markdown('''
-     <a class="toggle" href="javascript:document.getElementsByClassName('css-9s5bis edgvbvh3')[1].click();" target="_self">สิ้นสุดการตั้งค่าโปรแกรม</a>
-    ''', unsafe_allow_html=True)
+            if not video_file_buffer:
+                demo_video = 'testBS.mov'
+                st_video = open(demo_video, 'rb')
+                video_path = st_video.name
+                st.sidebar.warning('คุณกำลังใช้วิดีโอตัวอย่างในการประมวลผล', icon="⚠️")
+            else:
+                tffile.write(video_file_buffer.read())
+                st_video = open(tffile.name, 'rb')
+                video_path = st_video.name
+            emptyVideo = st.empty()
+            st.sidebar.video(st_video)
+            emptyVideo.video(st_video)
+                
+        #! Get Image------------------------------------------------------------------------------------------------------------------------
+        elif file_upload == 'รูปภาพ':
+            process_type = 'รูปภาพ'
+            image_file = st.sidebar.file_uploader(
+                'เลือก browse files หรือลากไฟล์ที่ต้องการไปที่กรอบด้านล่าง', 
+                type=['jpeg','jpg','png','webp'],
+            )
+            tffile = tempfile.NamedTemporaryFile(suffix='.jpg', delete=False)
+            if not image_file: 
+                image_file = Image.open('testBS.jpg')
+                pilImg = image_file
+                image_file = image_file.filename
+                st.sidebar.warning('คุณกำลังใช้ภาพตัวอย่างในการประมวลผล', icon="⚠️")
+            else: 
+                tffile.write(image_file.read())
+                temp_img = open(tffile.name, 'rb')
+                pilImg = Image.open(temp_img)
+                image_file = temp_img.name
+            st.sidebar.header('รูปแบบของการปรับปรุงรูปภาพ','Enhancing Image')
+            enhance_type = st.sidebar.radio('', 
+                ['Original (ภาพดั้งเดิม)','Contrast (ปรับความคมชัดของสีในภาพ)','Brightness (ปรับความสว่างของภาพ)'],
+                label_visibility='collapsed'
+            )
+            if enhance_type == 'Contrast (ปรับความคมชัดของสีในภาพ)':
+                c_rate = st.sidebar.slider('Contrast',0.5,3.5, value=1.0)
+                st.sidebar.error('** การปรับค่ารูปแบบของรูปภาพอาจส่งผลต่อความแม่นยำในการประมวลผลได้')
+                enhancer = ImageEnhance.Contrast(pilImg)
+                image_file = enhancer.enhance(c_rate)
+            if enhance_type == 'Brightness (ปรับความสว่างของภาพ)':
+                b_rate = st.sidebar.slider('Brightness',0.5,3.5, value=1.0)
+                st.sidebar.error('** การปรับค่าความสว่างของรูปภาพอาจส่งผลต่อความแม่นยำในการประมวลผลได้')
+                enhancer = ImageEnhance.Brightness(pilImg)
+                image_file = enhancer.enhance(b_rate)
+            st.sidebar.image(image_file)
+            showImage = st.empty()
+            showImage.image(image_file)
 
+        #! Get Webcam Image Capture------------------------------------------------------------------------------------------------------------------------
+        elif file_upload == 'กล้องถ่ายรูป':
+            camera = st.empty()
+            img_capture = camera.camera_input("เลือก 'Take Photo' เพื่อถ่ายรูปที่ต้องการใช้สำหรับการประมวลผล", label_visibility='collapsed')
+            if img_capture:
+                process_type = 'กล้องถ่ายรูป'
+                tffile = tempfile.NamedTemporaryFile(suffix='.jpg', delete=False)
+                tffile.write(img_capture.read())
+                temp_img = open(tffile.name, 'rb')
+                pilImg = Image.open(temp_img)
+                image_file = temp_img.name
+                camera.image(img_capture)  
+        #! Get Webcam------------------------------------------------------------------------------------------------------------------------
+        elif file_upload == 'กล้องเว็บแคม':
+            process_type = 'กล้องเว็บแคม'
+        st.sidebar.markdown('---')
 
-    if  file_upload == 'กล้องเว็บแคม' or \
-        (file_upload == 'กล้องถ่ายรูป' and img_capture) or \
-        (file_upload != 'กล้องถ่ายรูป' and start_btn) or \
-        (file_upload != 'กล้องถ่ายรูป' and start_mobile_btn):
-        with st.spinner(f'กำลังประมวลผล{process_type}...'):
-#! Process Image------------------------------------------------------------------------------------------------------------------------
-            if file_upload == 'รูปภาพ' or file_upload == 'กล้องถ่ายรูป':
-                modelForImage.conf = confidence
-                if len(assigned_class_id) > 0:
-                    modelForImage.classes = assigned_class_id
+        #! Process Start------------------------------------------------------------------------------------------------------------------------
+        #TODO Sidebar----
+        if file_upload != 'กล้องเว็บแคม' and file_upload != 'กล้องถ่ายรูป':
+            start_btn = st.sidebar.button('เริ่มต้นการประมวลผล', key='process_btn')
+        if file_upload == 'รูปภาพ' or file_upload == 'วิดีโอ':
+            st.write('-----')
+            emptyStartBtn = st.empty()
+            start_mobile_btn = emptyStartBtn.button(
+                'เริ่มต้นการประมวลผล',
+                key='process_btn1'
+            )
+        st.sidebar.markdown('''
+        <a class="toggle" href="javascript:document.getElementsByClassName('css-9s5bis edgvbvh3')[1].click();" target="_self">สิ้นสุดการตั้งค่าโปรแกรม</a>
+        ''', unsafe_allow_html=True)
+
+        if  file_upload == 'กล้องเว็บแคม' or \
+            (file_upload == 'กล้องถ่ายรูป' and img_capture) or \
+            (file_upload != 'กล้องถ่ายรูป' and start_btn) or \
+            (file_upload != 'กล้องถ่ายรูป' and start_mobile_btn):
+            with st.spinner(f'กำลังประมวลผล{process_type}...'):
+
+        #! Process Image------------------------------------------------------------------------------------------------------------------------
+                if file_upload == 'รูปภาพ' or file_upload == 'กล้องถ่ายรูป':
+                    if len(assigned_class_id) > 0:
+                        modelForImage.classes = assigned_class_id
                     result = modelForImage(image_file, size=640)
-                else:
-                    result = modelForImage(image_file, size=640)
-                if result:
-                    json = result.pandas().xyxy[0].to_dict(orient='list')
-                    detectedClass = json['class']
-                    detectedDict = {i:detectedClass.count(i) for i in detectedClass}
-                    r_img = result.render()
-                    if file_upload == 'กล้องถ่ายรูป':
-                        camera.image(r_img)
-                    else: showImage.image(r_img)
-#! Process Video------------------------------------------------------------------------------------------------------------------------
-            elif file_upload == 'วิดีโอ':
-                stop = st.button(
-                    'Stop Processing Video...',
-                    key='stop_btn',
-                    type = 'primary'
-                )
-                emptyVideo.empty()
-                emptyStartBtn.empty()
-                if len(assigned_class_id) > 0:
-                    run(
-                        weights='N.pt', 
-                        source=video_path, 
-                        device='cpu', 
-                        conf_thres=confidence,
-                        classes=assigned_class_id
-                    ) 
-                else:
-                    run(
-                        weights='N.pt', 
-                        source=video_path, 
-                        device='cpu', 
-                        conf_thres=confidence,
-                    )  
-#! Process Webcam Camera------------------------------------------------------------------------------------------------------------------------
-            elif file_upload == 'กล้องเว็บแคม':          
-                showStreamResult = st.sidebar.checkbox('แสดงข้อมูลโรคใบข้าวระหว่างประมวลผลด้วยกล้องเว็บแคม')
-                if showStreamResult: st.sidebar.warning('โปรดระวัง!! ข้อมูลที่แสดงผลระหว่างการประมวลผลด้วยกล้องเว็บแคมอาจมีความไม่ต่อเนื่อง', icon="⚠️")
-                translations={
-                    "start": "เริ่มต้นการประมวลผล",
-                    "stop": "หยุดการประมวลผล",
-                    "select_device": "เลือกอุปกรณ์",
-                }
-                stream = webrtc_streamer(
-                    key="webcam_process", 
-                    video_frame_callback=predictWebcam,
-                    rtc_configuration=rtc_configuration,
-                    media_stream_constraints={"video": True, "audio": False},
-                    translations=translations,
-                    async_processing=True
-                )
-                if showStreamResult and stream.state.playing:
-                    emptyCamResult = st.empty()
-                    while True:
-                        try:
-                            result = result_queue.get(timeout=1.0)        
-                        except queue.Empty:
-                            result = {}                     
-                        if result != {}:
-                            json = result.pandas().xyxy[0].to_dict(orient='list')
-                            detectedClass = json['class']
-                            detectedDict = {i:detectedClass.count(i) for i in detectedClass}  
-                            with emptyCamResult:
-                                showResult(detectedDict, detectedClass, file_upload)
-                        else:
-                            emptyCamResult.write('no detected')
-                                            
-#! Detected Result------------------------------------------------------------------------------------------------------------------------
-        if (file_upload == 'รูปภาพ' and (start_btn or start_mobile_btn)) or (file_upload == 'กล้องถ่ายรูป' and img_capture):
-            with st.container():
-                showResult(detectedDict,detectedClass, file_upload)
+                    if result:
+                        json = result.pandas().xyxy[0].to_dict(orient='list')
+                        detectedClass = json['class']
+                        detectedDict = {i:detectedClass.count(i) for i in detectedClass}
+                        r_img = result.render()
+                        if file_upload == 'กล้องถ่ายรูป':
+                            camera.image(r_img)
+                        else: showImage.image(r_img)
+
+        #! Process Video------------------------------------------------------------------------------------------------------------------------
+                elif file_upload == 'วิดีโอ':
+                    stop = st.button(
+                        'Stop Processing Video...',
+                        key='stop_btn',
+                        type = 'primary'
+                    )
+                    emptyVideo.empty()
+                    emptyStartBtn.empty()
+                    if len(assigned_class_id) > 0:
+                        run(
+                            weights='N.pt', 
+                            source=video_path, 
+                            device='cpu', 
+                            conf_thres=confidence,
+                            classes=assigned_class_id
+                        ) 
+                    else:
+                        run(
+                            weights='N.pt', 
+                            source=video_path, 
+                            device='cpu', 
+                            conf_thres=confidence,
+                        )  
+
+        #! Process Webcam Camera------------------------------------------------------------------------------------------------------------------------
+                elif file_upload == 'กล้องเว็บแคม':          
+                    showStreamResult = st.sidebar.checkbox('แสดงข้อมูลโรคใบข้าวระหว่างประมวลผลด้วยกล้องเว็บแคม')
+                    if showStreamResult: st.sidebar.warning('โปรดระวัง!! ข้อมูลที่แสดงผลระหว่างการประมวลผลด้วยกล้องเว็บแคมอาจมีความไม่ต่อเนื่อง', icon="⚠️")
+                    translations={
+                        "start": "เริ่มต้นการประมวลผล",
+                        "stop": "หยุดการประมวลผล",
+                        "select_device": "เลือกอุปกรณ์",
+                    }
+                    stream = webrtc_streamer(
+                        key="webcam_process", 
+                        video_frame_callback=predictWebcam,
+                        rtc_configuration=rtc_configuration,
+                        media_stream_constraints={"video": True, "audio": False},
+                        translations=translations,
+                        async_processing=True
+                    )
+                    if showStreamResult and stream.state.playing:
+                        emptyCamResult = st.empty()
+                        while True:
+                            try:
+                                result = result_queue.get(timeout=1.0)        
+                            except queue.Empty:
+                                result = {}                     
+                            if result != {}:
+                                json = result.pandas().xyxy[0].to_dict(orient='list')
+                                detectedClass = json['class']
+                                detectedDict = {i:detectedClass.count(i) for i in detectedClass}  
+                                with emptyCamResult:
+                                    showResult(detectedDict, detectedClass, file_upload)
+                            else:
+                                emptyCamResult.write('no detected')
+                                                
+        #! Detected Result------------------------------------------------------------------------------------------------------------------------
+            if (file_upload == 'รูปภาพ' and (start_btn or start_mobile_btn)) or (file_upload == 'กล้องถ่ายรูป' and img_capture):
+                with st.container():
+                    showResult(detectedDict,detectedClass, file_upload)
+    else: showResult(showDetected=False)
 if __name__ == '__main__':
     main()
-    #main1()
