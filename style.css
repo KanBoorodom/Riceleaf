@@ -50,6 +50,7 @@ label{color: #ff4b4b !important;}
     color: #de0808 !important;
     font-weight: bold;
 }
+[role="tab"][aria-selected="true"] > p{margin-bottom:0;}
 [data-testid="stAppViewContainer"]{
     position:relative;
     height: 100%;    
