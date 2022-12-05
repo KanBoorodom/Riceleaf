@@ -5,6 +5,10 @@ header{
 label{color: #ff4b4b !important;}
 #MainMenu {visibility: hidden;}
 .stTabs::after{background: transparent !important;}
+.stSlider{
+    background: #382f2f14;
+    padding: 5px;
+}
 .selected-tab{width:fit-content;}
 .option{
     font-size:2rem !important;
@@ -50,7 +54,16 @@ label{color: #ff4b4b !important;}
     color: #de0808 !important;
     font-weight: bold;
 }
-[role="tab"][aria-selected="true"] > p{margin-bottom:0;}
+[role="tab"][aria-selected="true"], .selected-tab > p{margin-bottom:0;}
+[data-baseweb="tab-panel"] img{
+    box-shadow: 0 4px 8px 0 rgb(0 0 0 / 20%), 0 6px 20px 0 rgb(0 0 0 / 19%);
+}
+[data-baseweb="select"] > div ,[data-baseweb="popover"] ul{
+    background: #c9cac9;
+    border: 1px solid #b2b4af;
+}
+[data-baseweb="popover"] .css-1gti4c{background:#d3d6cf;}
+[data-testid="stFileUploadDropzone"]{box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);}
 [data-testid="stAppViewContainer"]{
     position:relative;
     height: 100%;    
@@ -79,7 +92,14 @@ label{color: #ff4b4b !important;}
     z-index:-1;
 }
 [data-baseweb="tab"]{background:transparent !important;}
-[data-testid="stSidebar"][aria-expanded="true"]{width:400px !important;}
+[data-testid="stSidebar"][aria-expanded="true"]{
+    width:400px !important;
+    background: #c9cac9;
+    border: 1px solid #c2c5be;
+    padding:5px 10px;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    display:flex !important;
+}
 [data-testid="stSidebar"][aria-expanded="true"] > div:first-child{width:400px;}
 [data-testid="column"]{    
     min-height: 100px;
@@ -111,14 +131,12 @@ label{color: #ff4b4b !important;}
 [data-testid="stVerticalBlock"] div:nth-child(3) > div > div:nth-child(2){width:100%;}
 [data-testid="collapsedControl"]{display: initial;}
 [data-testid="stAppViewContainer"] > section:first-child{display:initial;}
-[tabindex="0"] > div > div > div > div:nth-child(6) > .stButton{
-        display:none;
-}
-[data-testid="stSidebar"] > div > div:nth-child(2) > div > div > div > div:last-child(1){display:initial}
+[testid="stSidebar"] > div > div:nth-child(2) > div > div > div > div:last-child(1){display:initial}
 [tabindex="0"] > div:first-child{ margin:auto; }
 [tabindex="0"] > footer{ margin:auto; }
 [tabindex="0"]+div > div > div > div > div > div > div > div{flex-wrap:wrap;}
 [tabindex="0"]+div > div > div > div > div > div > div > div > [data-baseweb="tab-highlight"]{display:none;}
+[data-testid="stExpander"]{box-shadow: 0 4px 8px 0 rgb(0 0 0 / 20%), 0 6px 20px 0 rgb(0 0 0 / 19%);}
 @media only screen and (max-width: 425px) {
     section > .css-6qob1r .e1fqkh3o3{width:300px !important;}
     .toggle{

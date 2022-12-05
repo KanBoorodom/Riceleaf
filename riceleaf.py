@@ -1,5 +1,6 @@
 import streamlit as st
 from streamlit_webrtc import webrtc_streamer
+import streamlit.components.v1 as components
 import av
 import tempfile
 import numpy as np
@@ -51,6 +52,8 @@ def chooseUseProgram():
 def chooseViewRicedata():
     st.session_state.use_program = False
     st.session_state.view_ricedata = True
+def readHTML(html):
+    pass
 def main():
 #!---- Styling-------------
     with open('style.css') as f:
@@ -162,9 +165,26 @@ def main():
 
         #! Get Webcam Image Capture------------------------------------------------------------------------------------------------------------------------
         elif file_upload == 'กล้องถ่ายรูป':
-            camera = st.empty()
-            img_capture = camera.camera_input("เลือก 'Take Photo' เพื่อถ่ายรูปที่ต้องการใช้สำหรับการประมวลผล", label_visibility='collapsed')
-            if img_capture:
+            img_capture = st.camera_input("", label_visibility='collapsed') 
+            if not img_capture:
+                components.html('''
+                    <script>
+                        const strlit = window.parent.document;
+                        let btnClass = strlit.querySelector('.ejtjsn20')
+                        btnClass.innerHTML = 'ถ่ายรูปเพื่อประมวลผล';
+                    </script>
+                    ''', height=5,)
+            if img_capture: 
+                components.html('''
+                <script>
+                    const strlit = window.parent.document;
+                    let btnClass = strlit.querySelector('.ejtjsn20')
+                    btnClass.innerHTML = 'ถ่ายรูปใหม่';
+                </script>
+                ''', height=5,)
+                st.markdown('----')
+                st.markdown(f'<h4>ผลการประมวลผลภาพถ่าย:</h4>', unsafe_allow_html=True) 
+                camera = st.empty()
                 process_type = 'กล้องถ่ายรูป'
                 tffile = tempfile.NamedTemporaryFile(suffix='.jpg', delete=False)
                 tffile.write(img_capture.read())
