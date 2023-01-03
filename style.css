@@ -28,7 +28,7 @@ label{color: #ff4b4b !important;}
 .css-af4qln h3{color: #e16060; font-size:14px; padding:0;}
 .e16nr0p31 h2{padding-bottom:0;}
 .css-1valv9w > div > div > div > p{margin:0;}
-.streamlit-expanderHeader > p{
+.streamlit-expanderHeader > [data-testid="stMarkdownContainer"] > p{
     font-size:1.8rem;
 }
 .h4-success,.h4-danger{
