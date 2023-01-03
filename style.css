@@ -169,8 +169,8 @@ label{color: #ff4b4b !important;}
         border: 1px solid;
         opacity: 0;
     }
-    [data-testid="stAppViewContainer"] > section:first-child{width:300px !important;}
-    [data-testid="stAppViewContainer"] > section:first-child > div:first-child{ width:300px;}
+    /* [data-testid="stAppViewContainer"] > section:first-child{width:300px !important;}
+    [data-testid="stAppViewContainer"] > section:first-child > div:first-child{ width:300px;} */
     [data-testid="stAppViewContainer"] > section:first-child > div:first-child > div:nth-child(2) > div > div > div > div:nth-last-child(2){
         display:none;
     }
