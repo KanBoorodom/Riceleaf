@@ -52,7 +52,7 @@ label{color: #ff4b4b !important;}
     text-align:center;
 }
 .st-ic > div > div > div > p{font-size:1.8rem;}
-[role="tab-list"] > button > div > p{
+[role="tablist"] > button > div > p{
     margin-bottom:0;
 }
 [role="tab"][aria-selected="true"], .selected-tab{
