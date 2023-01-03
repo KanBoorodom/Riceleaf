@@ -147,7 +147,6 @@ label{color: #ff4b4b !important;}
 [tabindex="0"]+div > div > div > div > div > div > div > div > [data-baseweb="tab-highlight"]{display:none;}
 [data-testid="stExpander"]{box-shadow: 0 4px 8px 0 rgb(0 0 0 / 20%), 0 6px 20px 0 rgb(0 0 0 / 19%);}
 @media only screen and (max-width: 425px) {
-    footer,.styles_terminalButton__3xUnY,.viewerBadge_link__1S137{display:none !important;}
     .viewerBadge_container__1QSob{
         border:2px solid red;
     }
