@@ -21,8 +21,8 @@ rtc_configuration = {
         {'urls':['stun:stun.l.google.com:19302']}
     ]
 }
-modelForImage = torch.hub.load('yolov5', 'custom', path='M.pt', _verbose=False, source='local')
-modelForWebcam = torch.hub.load('yolov5', 'custom', path='N.pt', _verbose=False, source='local')
+modelForImage = torch.hub.load('yolov5', 'custom', path='weight/best (15).pt', _verbose=False, source='local')
+modelForWebcam = torch.hub.load('yolov5', 'custom', path='weight/N.pt', _verbose=False, source='local')
 
 detectedClass = []
 detectedDict = {}
@@ -79,7 +79,7 @@ def main():
         st.sidebar.header('ค่าความเชื่อมั่น')
         confidence = st.sidebar.slider(
             'เลือกค่าความเชื่อมั่นที่ต้องการ',
-            min_value = 0.0, max_value = 1.0, value = 0.25,
+            min_value = 0.0, max_value = 1.0, value = 0.354,
         )
         modelForImage.conf = confidence
         modelForWebcam.conf = confidence
@@ -135,7 +135,7 @@ def main():
             )
             tffile = tempfile.NamedTemporaryFile(suffix='.jpg', delete=False)
             if not image_file: 
-                image_file = Image.open('testBS.jpg')
+                image_file = Image.open('3CLASS.png')
                 pilImg = image_file
                 image_file = image_file.filename
                 st.sidebar.warning('คุณกำลังใช้ภาพตัวอย่างในการประมวลผล', icon="⚠️")
@@ -243,7 +243,7 @@ def main():
                     emptyStartBtn.empty()
                     if len(assigned_class_id) > 0:
                         run(
-                            weights='N.pt', 
+                            weights='weight/N.pt', 
                             source=video_path, 
                             device='cpu', 
                             conf_thres=confidence,
@@ -251,7 +251,7 @@ def main():
                         ) 
                     else:
                         run(
-                            weights='N.pt', 
+                            weights='weight/N.pt', 
                             source=video_path, 
                             device='cpu', 
                             conf_thres=confidence,
