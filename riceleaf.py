@@ -211,6 +211,7 @@ def main():
         ''', unsafe_allow_html=True)
         st.write(start_btn)
         st.write(start_mobile_btn)
+        st.write(file_upload)
         if  file_upload == 'กล้องเว็บแคม' or \
             (file_upload == 'กล้องถ่ายรูป' and img_capture) or \
             (file_upload != 'กล้องถ่ายรูป' and start_btn) or \
