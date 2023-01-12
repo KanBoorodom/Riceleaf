@@ -239,13 +239,14 @@ def main():
         #! Process Video------------------------------------------------------------------------------------------------------------------------
                 elif file_upload == 'วิดีโอ':
                     stop = st.button(
-                        'Stop Processing Video...',
+                        'หยุดการประมวลผลวิดีโอ...',
                         key='stop_btn',
                         type = 'primary',
                         on_click=stopBtn
                     )
                     emptyVideo.empty()
                     emptyStartBtn.empty()
+                    st.write(stop)
                     if not stop:
                         if len(assigned_class_id) > 0:
                             run(
