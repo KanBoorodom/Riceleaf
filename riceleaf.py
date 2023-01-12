@@ -231,7 +231,8 @@ def main():
 
         #! Process Video------------------------------------------------------------------------------------------------------------------------
                 elif file_upload == 'วิดีโอ':
-                    stop = st.button(
+                    stop = st.empty()
+                    stop.button(
                         'หยุดการประมวลผลวิดีโอ...',
                         key='stop_btn',
                         type = 'primary',
@@ -255,7 +256,7 @@ def main():
                                 conf_thres=confidence,
                             )  
                     else:
-                        stop = None
+                        stop.empty()
 
         #! Process Webcam Camera------------------------------------------------------------------------------------------------------------------------
                 elif file_upload == 'กล้องเว็บแคม':          
