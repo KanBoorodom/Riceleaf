@@ -199,8 +199,7 @@ def main():
         #TODO Sidebar----
         if file_upload != 'กล้องเว็บแคม' and file_upload != 'กล้องถ่ายรูป':
             start_btn = st.sidebar.button('เริ่มต้นการประมวลผล', key='process_btn')
-        if file_upload == 'รูปภาพ' or file_upload == 'วิดีโอ':
-            st.write('-----')
+            emptyStartBtn = False
             emptyStartBtn = st.empty()
             start_mobile_btn = False
             start_mobile_btn = emptyStartBtn.button(
@@ -212,14 +211,10 @@ def main():
         ''', unsafe_allow_html=True)
         st.write(start_btn)
         st.write(start_mobile_btn)
-        st.write(file_upload)
         if  file_upload == 'กล้องเว็บแคม' or \
             (file_upload == 'กล้องถ่ายรูป' and img_capture) or \
             (file_upload != 'กล้องถ่ายรูป' and start_btn) or \
             (file_upload != 'กล้องถ่ายรูป' and start_mobile_btn):
-            def stopBtn():
-                    emptyVideo.empty()
-                    emptyStartBtn.empty()
             with st.spinner(f'กำลังประมวลผล{process_type}...'):
 
         #! Process Image------------------------------------------------------------------------------------------------------------------------
@@ -242,7 +237,6 @@ def main():
                         'หยุดการประมวลผลวิดีโอ...',
                         key='stop_btn',
                         type = 'primary',
-                        on_click=stopBtn
                     )
                     emptyVideo.empty()
                     emptyStartBtn.empty()
