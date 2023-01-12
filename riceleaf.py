@@ -239,24 +239,21 @@ def main():
                     )
                     emptyVideo.empty()
                     emptyStartBtn.empty()
-                    if stop:
-                       print('stop video========')
-                    if not stop:
-                        if len(assigned_class_id) > 0:
-                            run(
-                                weights='weight/N-Last.pt', 
-                                source=video_path, 
-                                device='cpu', 
-                                conf_thres=confidence,
-                                classes=assigned_class_id,
-                            ) 
-                        else:
-                            run(
-                                weights='weight/N-Last.pt', 
-                                source=video_path, 
-                                device='cpu', 
-                                conf_thres=confidence,
-                            )  
+                    if len(assigned_class_id) > 0:
+                        run(
+                            weights='weight/N-Last.pt', 
+                            source=video_path, 
+                            device='cpu', 
+                            conf_thres=confidence,
+                            classes=assigned_class_id,
+                        ) 
+                    else:
+                        run(
+                            weights='weight/N-Last.pt', 
+                            source=video_path, 
+                            device='cpu', 
+                            conf_thres=confidence,
+                        )  
 
         #! Process Webcam Camera------------------------------------------------------------------------------------------------------------------------
                 elif file_upload == 'กล้องเว็บแคม':          
