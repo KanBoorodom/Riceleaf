@@ -199,12 +199,7 @@ def main():
         #TODO Sidebar----
         if file_upload != 'กล้องเว็บแคม' and file_upload != 'กล้องถ่ายรูป':
             start_btn = st.sidebar.button('เริ่มต้นการประมวลผล', key='process_btn')
-            emptyStartBtn = False
             emptyStartBtn = st.empty()
-            emptyStartBtn.empty()
-            emptyStartBtn.write('test')
-            emptyStartBtn.empty()
-            st.write('==========')
             start_mobile_btn = emptyStartBtn.button(
                 'เริ่มต้นการประมวลผล',
                 key='process_btn1'
@@ -241,9 +236,9 @@ def main():
                         key='stop_btn',
                         type = 'primary',
                     )
-                    emptyVideo.empty()
-                    emptyStartBtn.empty()
                     if not stop:
+                        emptyVideo.empty()
+                        emptyStartBtn.empty()
                         if len(assigned_class_id) > 0:
                             run(
                                 weights='weight/N-Last.pt', 
@@ -259,6 +254,8 @@ def main():
                                 device='cpu', 
                                 conf_thres=confidence,
                             )  
+                    else:
+                        stop = None
 
         #! Process Webcam Camera------------------------------------------------------------------------------------------------------------------------
                 elif file_upload == 'กล้องเว็บแคม':          
