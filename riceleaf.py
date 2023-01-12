@@ -201,7 +201,11 @@ def main():
             start_btn = st.sidebar.button('เริ่มต้นการประมวลผล', key='process_btn')
             emptyStartBtn = False
             emptyStartBtn = st.empty()
-            start_mobile_btn = False
+            emptyStartBtn.empty()
+            emptyStartBtn.write('test')
+            emptyStartBtn.empty()
+            st.write(emptyStartBtn)
+            st.write('==========')
             start_mobile_btn = emptyStartBtn.button(
                 'เริ่มต้นการประมวลผล',
                 key='process_btn1'
@@ -240,7 +244,6 @@ def main():
                     )
                     emptyVideo.empty()
                     emptyStartBtn.empty()
-                    st.write(stop)
                     if not stop:
                         if len(assigned_class_id) > 0:
                             run(
