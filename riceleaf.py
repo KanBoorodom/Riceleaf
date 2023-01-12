@@ -204,7 +204,6 @@ def main():
             emptyStartBtn.empty()
             emptyStartBtn.write('test')
             emptyStartBtn.empty()
-            st.write(emptyStartBtn)
             st.write('==========')
             start_mobile_btn = emptyStartBtn.button(
                 'เริ่มต้นการประมวลผล',
