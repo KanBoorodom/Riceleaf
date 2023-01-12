@@ -52,8 +52,6 @@ def chooseUseProgram():
 def chooseViewRicedata():
     st.session_state.use_program = False
     st.session_state.view_ricedata = True
-def readHTML(html):
-    pass
 def main():
 #!---- Styling-------------
     with open('style.css') as f:
@@ -241,21 +239,36 @@ def main():
                     )
                     emptyVideo.empty()
                     emptyStartBtn.empty()
-                    if len(assigned_class_id) > 0:
-                        run(
-                            weights='weight/N.pt', 
+                    if stop:
+                       print('stop video========')
+                    if not stop:
+                        if len(assigned_class_id) > 0:
+                            run(
+                                weights='weight/N-Last.pt', 
+                                source=video_path, 
                             source=video_path, 
+                                source=video_path, 
+                                device='cpu', 
                             device='cpu', 
-                            conf_thres=confidence,
-                            classes=assigned_class_id
+                                device='cpu', 
+                                conf_thres=confidence,
+                                classes=assigned_class_id,
+                            ) 
                         ) 
-                    else:
-                        run(
-                            weights='weight/N.pt', 
+                            ) 
+                        else:
+                            run(
+                                weights='weight/N-Last.pt', 
+                                source=video_path, 
                             source=video_path, 
+                                source=video_path, 
+                                device='cpu', 
                             device='cpu', 
-                            conf_thres=confidence,
+                                device='cpu', 
+                                conf_thres=confidence,
+                            )  
                         )  
+                            )  
 
         #! Process Webcam Camera------------------------------------------------------------------------------------------------------------------------
                 elif file_upload == 'กล้องเว็บแคม':          
