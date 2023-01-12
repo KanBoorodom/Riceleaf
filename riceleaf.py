@@ -209,7 +209,8 @@ def main():
         st.sidebar.markdown('''
         <a class="toggle" href="javascript:document.getElementsByClassName('css-4l4x4v edgvbvh3')[1].click();" target="_self">สิ้นสุดการตั้งค่าโปรแกรม</a>
         ''', unsafe_allow_html=True)
-
+        st.write(start_btn)
+        st.write(start_mobile_btn)
         if  file_upload == 'กล้องเว็บแคม' or \
             (file_upload == 'กล้องถ่ายรูป' and img_capture) or \
             (file_upload != 'กล้องถ่ายรูป' and start_btn) or \
@@ -239,9 +240,6 @@ def main():
                     )
                     emptyVideo.empty()
                     emptyStartBtn.empty()
-                    if stop:
-                        emptyVideo.empty()
-                        emptyStartBtn.empty()
                     if not stop:
                         if len(assigned_class_id) > 0:
                             run(
