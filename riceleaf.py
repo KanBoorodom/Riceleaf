@@ -246,28 +246,16 @@ def main():
                             run(
                                 weights='weight/N-Last.pt', 
                                 source=video_path, 
-                            source=video_path, 
-                                source=video_path, 
-                                device='cpu', 
-                            device='cpu', 
                                 device='cpu', 
                                 conf_thres=confidence,
                                 classes=assigned_class_id,
-                            ) 
-                        ) 
                             ) 
                         else:
                             run(
                                 weights='weight/N-Last.pt', 
                                 source=video_path, 
-                            source=video_path, 
-                                source=video_path, 
-                                device='cpu', 
-                            device='cpu', 
                                 device='cpu', 
                                 conf_thres=confidence,
-                            )  
-                        )  
                             )  
 
         #! Process Webcam Camera------------------------------------------------------------------------------------------------------------------------
