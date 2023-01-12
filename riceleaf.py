@@ -216,6 +216,9 @@ def main():
             (file_upload == 'กล้องถ่ายรูป' and img_capture) or \
             (file_upload != 'กล้องถ่ายรูป' and start_btn) or \
             (file_upload != 'กล้องถ่ายรูป' and start_mobile_btn):
+            def stopBtn():
+                    emptyVideo.empty()
+                    emptyStartBtn.empty()
             with st.spinner(f'กำลังประมวลผล{process_type}...'):
 
         #! Process Image------------------------------------------------------------------------------------------------------------------------
@@ -237,7 +240,8 @@ def main():
                     stop = st.button(
                         'Stop Processing Video...',
                         key='stop_btn',
-                        type = 'primary'
+                        type = 'primary',
+                        on_click=stopBtn
                     )
                     emptyVideo.empty()
                     emptyStartBtn.empty()
