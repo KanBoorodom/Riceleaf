@@ -202,6 +202,7 @@ def main():
         if file_upload == 'รูปภาพ' or file_upload == 'วิดีโอ':
             st.write('-----')
             emptyStartBtn = st.empty()
+            start_mobile_btn = False
             start_mobile_btn = emptyStartBtn.button(
                 'เริ่มต้นการประมวลผล',
                 key='process_btn1'
