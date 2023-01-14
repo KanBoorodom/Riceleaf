@@ -28,6 +28,7 @@ label{color: #ff4b4b !important;}
 .css-af4qln h3{color: #e16060; font-size:14px; padding:0;}
 .e16nr0p31 h2{padding-bottom:0;}
 .css-1valv9w > div > div > div > p{margin:0;}
+.streamlit-expanderHeader{font-size: 1.8rem;}
 .streamlit-expanderHeader > p{
     font-size:1.8rem;
 }
@@ -62,6 +63,15 @@ label{color: #ff4b4b !important;}
     margin-bottom: 3px;
     color: #de0808 !important;
     font-weight: bold;
+}   
+.block-container >div > div > div:nth-child(3) > div > button,
+.block-container >div > div > div:nth-child(4) > div > button
+{
+    font-size:20px;
+    font-weight: bold;
+    border: 1px solid #bba4a4 !important;
+    padding: 10px;
+    box-shadow: 0 4px 8px 0 rgb(0 0 0 / 20%), 0 6px 20px 0 rgb(0 0 0 / 19%);
 }
 [role="tab"][aria-selected="true"], .selected-tab > p{margin-bottom:0;}
 [data-baseweb="tab-panel"] img{
@@ -146,6 +156,20 @@ label{color: #ff4b4b !important;}
 [tabindex="0"]+div > div > div > div > div > div > div > div{flex-wrap:wrap;}
 [tabindex="0"]+div > div > div > div > div > div > div > div > [data-baseweb="tab-highlight"]{display:none;}
 [data-testid="stExpander"]{box-shadow: 0 4px 8px 0 rgb(0 0 0 / 20%), 0 6px 20px 0 rgb(0 0 0 / 19%);}
+.err-container{
+    border:2px solid #e8e8e8;
+    padding:20px;
+    margin-top:30px;
+}
+#whoooops{
+    color:red;
+    font-size:50px;
+}
+.err-text{font-size:28px;}
+#whoooops, .err-text{
+    text-align:center;
+    font-weight:bold;
+}
 @media only screen and (max-width: 425px) {
     .viewerBadge_container__1QSob{
         border:2px solid red;
