@@ -68,7 +68,10 @@ def main():
         title.title('ข้อมูลโรคข้าว(แบ่งตามหมวดหมู่สาเหตุการเกิดโรค)')
     if st.session_state.use_program:
         st.markdown('''
-        <a class="toggle" href="javascript:document.getElementsByClassName('css-4l4x4v edgvbvh3')[1].click();" target="_self">ตั้งค่าโปรแกรม</a>
+        <a class="toggle" href="
+            javascript:document.getElementsByClassName('css-4l4x4v edgvbvh3')[1].click();
+            javascript:document.getElementsByClassName('css-4l4x4v edgvbvh3')[4].click();    
+        " target="_self">ตั้งค่าโปรแกรม</a>
         ''', unsafe_allow_html=True)
         if not st.session_state.view_ricedata:
             st.sidebar.button('ดูข้อมูลโรคข้าว', on_click=chooseViewRicedata)
@@ -114,7 +117,8 @@ def main():
             )
             tffile = tempfile.NamedTemporaryFile(suffix='.mp4', delete=False)
             if not video_file_buffer:
-                demo_video = 'testBS.mov'
+                #demo_video = 'testBS.mov'
+                demo_video = 'TestVideoNew.mov'
                 st_video = open(demo_video, 'rb')
                 video_path = st_video.name
                 st.sidebar.warning('คุณกำลังใช้วิดีโอตัวอย่างในการประมวลผล', icon="⚠️")
@@ -207,7 +211,10 @@ def main():
                 key='process_btn1'
             )
         st.sidebar.markdown('''
-        <a class="toggle" href="javascript:document.getElementsByClassName('css-4l4x4v edgvbvh3')[1].click();" target="_self">สิ้นสุดการตั้งค่าโปรแกรม</a>
+        <a class="toggle" href="
+            javascript:document.getElementsByClassName('css-4l4x4v edgvbvh3')[1].click();
+            javascript:document.getElementsByClassName('css-4l4x4v edgvbvh3')[4].click();    
+        " target="_self">สิ้นสุดการตั้งค่าโปรแกรม</a>
         ''', unsafe_allow_html=True)
         if  file_upload == 'กล้องเว็บแคม' or \
             (file_upload == 'กล้องถ่ายรูป' and img_capture) or \
