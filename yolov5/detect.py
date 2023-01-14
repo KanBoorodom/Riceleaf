@@ -195,7 +195,7 @@ def run(
                             st.markdown('<h4 class="h4-success">ตรวจพบโรคใบข้าว</h4>', unsafe_allow_html=True)  
                             #! Leaf Blast----------------------------------
                             if 'Leaf Blast' in detectedClass:
-                                with st.expander(f'ตรวจพบโรคใบไหม้ทั้งหมด: {detectedClass["Leaf Blast"]} ตำแหน่ง',True):
+                                with st.expander(f'ตรวจพบโรคไหม้ทั้งหมด: {detectedClass["Leaf Blast"]} ตำแหน่ง',True):
                                     st.markdown(f'<h4 class="tab-subhead">โรคไหม้ (Rice Blast Disease)</h4>', unsafe_allow_html=True)
                                     st.markdown('<hr>',unsafe_allow_html=   True)  
                                     tab1,tab2,tab3,tab4,tab5 = st.tabs(['สาเหตุของโรคและภูมิภาคที่พบ','อาการของโรค','การแพร่ระบาด','การป้องกัน','ข้อควรระวัง'])
@@ -343,8 +343,10 @@ def run(
                                                 <p class="indent"><span class="bold">ใช้สารป้องกันกำจัดแมลงพาหะ</span> ได้แก่ สารฆ่าแมลงในระยะที่แมลงเป็นตัวอ่อน เช่น ไดโนทีฟูเรน หรือ บูโพรเฟซิน หรือ อีโทเฟนพรอกซ์ ไม่ควรใช้สารฆ่าแมลงผสมกันหลายๆ ชนิด หรือใช้สารฆ่าแมลงผสมสารกำจัดโรคพืชหรือสารกำจัดวัชพืช เพราะอาจทำให้ประสิทธิภาพของสารฆ่าแมลงลดลง ไม่ใช้สารกลุ่มไพรีทรอยด์สังเคราะห์ เช่น ไซเพอร์มิทริน ไซฮาโลทริน เดลต้ามิทริน</p>'
                                             ,unsafe_allow_html=True)
                 else:
-                    st.header('ไม่พบโรคใบข้าวจากการประมวลผล')
-                    st.error('การประมวลผลไม่พบอาจเกิดจากการเลือกใช้ค่าความเชื่อมั่นที่สูงมากจนเกินไป หรือการใช้รูปภาพที่ไม่เหมาะสม')
+                    with expanderContainer:
+                        with st.container():
+                            st.header('ไม่พบโรคใบข้าวจากการประมวลผล')
+                            st.error('การประมวลผลไม่พบอาจเกิดจากการเลือกใช้ค่าความเชื่อมั่นที่สูงมากจนเกินไป หรือการใช้รูปภาพที่ไม่เหมาะสม')
              #if(breakVideo): break
             if view_img: #!------ diff
                 if platform.system() == 'Linux' and p not in windows:

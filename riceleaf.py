@@ -56,15 +56,15 @@ def main():
 #!---- Styling-------------
     with open('style.css') as f:
         st.markdown(f'<style>{f.read()}</style>',unsafe_allow_html=True)
-    diseaseName = ['โรคใบไหม้','โรคขอบใบแห้ง','โรคใบจุดสีน้ำตาล','โรคกาบใบแห้ง','โรคใบสีส้ม']
+    diseaseName = ['โรคไหม้','โรคขอบใบแห้ง','โรคใบจุดสีน้ำตาล','โรคกาบใบแห้ง','โรคใบสีส้ม']
     inputOption = ('รูปภาพ', 'วิดีโอ', 'กล้องถ่ายรูป','กล้องเว็บแคม')
     title = st.empty()
-    title.title('โปรแกรมตรวจสอบโรคใบข้าวด้วย YOLOV5')
+    title.title('โปรแกรมตรวจสอบโรคใบข้าว')
     if not st.session_state.use_program and not st.session_state.view_ricedata: #TODO default when start program -----
         st.button('ใช้โปรแกรมตรวจสอบโรคใบข้าว', on_click=chooseUseProgram)
         st.button('ดูข้อมูลโรคข้าว', on_click=chooseViewRicedata)
     elif not st.session_state.use_program:
-        st.button('ใช้โปรแกรมประมวลผลโรคใบข้าว', on_click=chooseUseProgram)
+        st.button('ใช้โปรแกรมตรวจสอบผลโรคใบข้าว', on_click=chooseUseProgram)
         title.title('ข้อมูลโรคข้าว(แบ่งตามหมวดหมู่สาเหตุการเกิดโรค)')
     if st.session_state.use_program:
         st.markdown('''
@@ -79,6 +79,8 @@ def main():
             'เลือกค่าความเชื่อมั่นที่ต้องการ',
             min_value = 0.0, max_value = 1.0, value = 0.354,
         )
+        st.sidebar.markdown('''
+        <p style="color: red;">ค่าความเชื่อมั่นที่เลือกจะส่งผลต่อการตรวจพบโรคใบข้าว และความถูกต้องของการประมวลผล</p>''', unsafe_allow_html=True)
         modelForImage.conf = confidence
         modelForWebcam.conf = confidence
 
@@ -207,8 +209,6 @@ def main():
         st.sidebar.markdown('''
         <a class="toggle" href="javascript:document.getElementsByClassName('css-4l4x4v edgvbvh3')[1].click();" target="_self">สิ้นสุดการตั้งค่าโปรแกรม</a>
         ''', unsafe_allow_html=True)
-        st.write(start_btn)
-        st.write(start_mobile_btn)
         if  file_upload == 'กล้องเว็บแคม' or \
             (file_upload == 'กล้องถ่ายรูป' and img_capture) or \
             (file_upload != 'กล้องถ่ายรูป' and start_btn) or \
@@ -242,7 +242,7 @@ def main():
                         emptyStartBtn.empty()
                         if len(assigned_class_id) > 0:
                             run(
-                                weights='weight/N-Last.pt', 
+                                weights='weight/N.pt', 
                                 source=video_path, 
                                 device='cpu', 
                                 conf_thres=confidence,
@@ -250,7 +250,7 @@ def main():
                             ) 
                         else:
                             run(
-                                weights='weight/N-Last.pt', 
+                                weights='weight/N.pt', 
                                 source=video_path, 
                                 device='cpu', 
                                 conf_thres=confidence,
@@ -297,4 +297,12 @@ def main():
                     showResult(detectedDict,detectedClass, file_upload)
     elif st.session_state.view_ricedata: showResult(showDetected=False)
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+
+    except Exception as e:
+        st.write(e)
+        st.markdown('<div class="err-container"> \
+            <h1 clas="err-header">Whoooops</h1> \
+            <p class="err-text">looks like something went wrong Please try again rather.</p> \
+        </div>',unsafe_allow_html=True)                      

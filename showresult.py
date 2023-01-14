@@ -7,7 +7,7 @@ def showResult(detectedDict='',detectedClass='', file_upload='',showDetected=Tru
                 st.markdown('<h4 class="h4-success">ตรวจพบโรคใบข้าว</h4>', unsafe_allow_html=True)
                 #TODO Leaf Blast--------------------------------------------------------------------
                 if 0 in detectedDict:
-                    with st.expander(f'ตรวจพบโรคใบไหม้ทั้งหมด: {detectedDict[0]} ตำแหน่ง',True):
+                    with st.expander(f'ตรวจพบโรคไหม้ทั้งหมด: {detectedDict[0]} ตำแหน่ง',True):
                         st.markdown(f'<h4 class="tab-subhead">โรคไหม้ (Rice Blast Disease)</h4>', unsafe_allow_html=True)
                         st.markdown('<hr>',unsafe_allow_html=   True)  
                         tab1,tab2,tab3,tab4,tab5 = st.tabs(['อาการของโรค','สาเหตุของโรคและภูมิภาคที่พบ','การแพร่ระบาด','การป้องกัน','ข้อควรระวัง'])
