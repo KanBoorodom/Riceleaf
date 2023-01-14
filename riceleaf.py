@@ -210,12 +210,6 @@ def main():
                 'เริ่มต้นการประมวลผล',
                 key='process_btn1'
             )
-        st.sidebar.markdown('''
-        <a class="toggle" href="
-            javascript:document.getElementsByClassName('css-4l4x4v edgvbvh3')[1].click();
-            javascript:document.getElementsByClassName('css-4l4x4v edgvbvh3')[4].click();    
-        " target="_self">สิ้นสุดการตั้งค่าโปรแกรม</a>
-        ''', unsafe_allow_html=True)
         if  file_upload == 'กล้องเว็บแคม' or \
             (file_upload == 'กล้องถ่ายรูป' and img_capture) or \
             (file_upload != 'กล้องถ่ายรูป' and start_btn) or \
