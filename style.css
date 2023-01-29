@@ -3,7 +3,7 @@ header{
     display:none !important;
 }
 label{color: #ff4b4b !important;}
-#MainMenu {visibility: hidden;}
+#MainMenu {/* visibility: hidden; */ position:relative; z-index:999999999; background:red;}
 .stTabs::after{background: transparent !important;}
 .stSlider{
     background: #382f2f14;
@@ -169,6 +169,9 @@ label{color: #ff4b4b !important;}
 #whoooops, .err-text{
     text-align:center;
     font-weight:bold;
+}
+.for-close{
+    align-self: flex-end;
 }
 @media only screen and (max-width: 425px) {
     .viewerBadge_container__1QSob{

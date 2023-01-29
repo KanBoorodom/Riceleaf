@@ -111,7 +111,7 @@ def main():
         disabled=st.session_state.disabled_btn
     )
     if lang == 'ไทย':
-        diseaseName = ['โรคใบไหม้','โรคขอบใบแห้ง','โรคใบจุดสีน้ำตาล','โรคกาบใบแห้ง','โรคใบสีส้ม']
+        diseaseName = ['โรคไหม้','โรคขอบใบแห้ง','โรคใบจุดสีน้ำตาล','โรคกาบใบแห้ง','โรคใบสีส้ม']
         inputOption = ('รูปภาพ', 'วิดีโอ', 'กล้องเว็บแคม')
     else:
         diseaseName = ['Rice Blast','Bacterial Blight','BrownSpot','Sheath Blight','Tungro']
@@ -304,7 +304,7 @@ def main():
                     with st.container():
                         #TODO Leaf Blast--------------------------------------------------------------------
                         if 0 in detectedDict:
-                            with st.expander(f'ตรวจพบโรคใบไหม้ทั้งหมด: {detectedDict[0]} ตำแหน่ง',True):
+                            with st.expander(f'ตรวจพบโรคไหม้ทั้งหมด: {detectedDict[0]} ตำแหน่ง',True):
                                 st.markdown(f'<h4 class="tab-subhead">โรคไหม้ (Rice Blast Disease)</h4>', unsafe_allow_html=True)
                                 st.markdown('<hr>',unsafe_allow_html=   True)  
                                 tab1,tab2,tab3,tab4,tab5 = st.tabs(['สาเหตุของโรคและภูมิภาคที่พบ','อาการของโรค','การแพร่ระบาด','การป้องกัน','ข้อควรระวัง'])

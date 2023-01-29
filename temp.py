@@ -1,657 +1,333 @@
-""" 
-def predictVideo(video_file):
-    imgpath = os.path.join('data/uploads', video_file.name)
-    outputpath = os.path.join('data/video_output', os.path.basename(imgpath))
-
-    with open(imgpath, mode='wb') as f:
-        f.write(video_file.read())  # save video to disk
-
-    st_video = open(imgpath, 'rb')
-    video_bytes = st_video.read()
-    st.video(video_bytes)
-    st.write("Uploaded Video")
-    #run(weights='S.pt', source=imgpath, device=0) if device == 'cuda' else 
-    run(weights='N.pt', source=imgpath, device='cpu')
-    st_video2 = open(outputpath, 'rb')
-    video_bytes2 = st_video2.read()
-    st.video(video_bytes2)
-    st.write("Model Prediction")
-"""
-
-
-"""     model = torch.hub.load('yolov5', 'custom', path='S.pt', force_reload=True, source='local') 
-    model.conf = confidence
-    if len(classes):
-        model.classes = classes
-    pred = model(image_file, size=640)
-    predJSON = json.loads(pred.pandas().xyxy[0].to_json(orient="records"))
-    predSet = set()
-    for item in predJSON:
-        predSet.add(item['name'])
-    pred.render()  # render bbox in image
-
-    for im in pred.ims:
-        im_base64 = Image.fromarray(im)
-    return im_base64 """
-
-
-#b4 adjust image funct
-from cgitb import enable
-from tkinter.tix import COLUMN
 import streamlit as st
-from streamlit_webrtc import webrtc_streamer, WebRtcMode, RTCConfiguration
+from streamlit_webrtc import webrtc_streamer
+import streamlit.components.v1 as components
 import av
 import tempfile
-import cv2
-import pandas as pd
 import numpy as np
 from PIL import Image, ImageEnhance
-import os  
 import torch
-#from detect import detect
 from yolov5.detect import run
-import json
-
-modelForWebcam = torch.hub.load('yolov5', 'custom', path='M.pt', _verbose=False, source='local')
-#! State------------------------------
-if 'disabled_btn' not in st.session_state:
-    st.session_state.disabled_btn = False
+from showresult import showResult
+import queue
 st.cache()
-def local_css(file_name):
-    with open(file_name) as f:
-        st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
-def load_image(img):
-    im = Image.open(img)
-    return im
-def returnLang(thai, eng, lang):
-    if(lang == 'ไทย'):
-         return thai
-    else:
-        return eng
-def predictImage(image_file, confidence, classes):
-    run(
-        weights='M.pt', 
-        source=image_file, 
-        device='cpu', 
-        conf_thres=confidence,
-        classes=classes
-    ) 
+#! Page Setup----------------------
+st.set_page_config(
+    page_title="Rice Leaf Disease Detection",
+    initial_sidebar_state= 'auto' 
+)
+#! RTC Configuration----------------------
+rtc_configuration = {
+    'iceServers': [
+        {'urls':['stun:stun.l.google.com:19302']}
+    ]
+}
+modelForImage = torch.hub.load('yolov5', 'custom', path='weight/best (15) (1).pt', _verbose=False, source='local')
+modelForWebcam = torch.hub.load('yolov5', 'custom', path='weight/n-last1.pt', _verbose=False, source='local')
 
-def predictWebcam(frame):
-    img = frame.to_ndarray(format="bgr24")
-   # flipped = img[:, ::-1, :]
-   # im_pil = Image.fromarray(flipped)
-    results = modelForWebcam(img, size=640)
-    bbox_img = np.array(results.render()[0])
-    return av.VideoFrame.from_ndarray(bbox_img, format="bgr24")
-
-def disableBtn(uplType:str):
-    if uplType == 'Video' or uplType == 'วิดีโอ':
-        st.session_state.disabled_btn = not st.session_state.disabled_btn 
-def main():
-    st.markdown(
-        """
-            <style>
-                #MainMenu {visibility: hidden;}
-                .css-af4qln h3{color: #e16060; font-size:14px; padding:0;}
-                .e16nr0p31 h2{padding-bottom:0;}
-                label{color: #ff4b4b !important;}
-                [data-testid="stSidebar"][aria-expanded="true"]{width:400px !important;}
-                [data-testid="stSidebar"][aria-expanded="true"] > div:first-child{width:400px;}
-                [data-testid="column"]{    
-                    min-height: 100px;
-                    border-radius: 8px;
-                }
-                [data-testid="stHorizontalBlock"] > [data-testid="column"]:first-child{background: #a4b6dd;}
-                [data-testid="stHorizontalBlock"] > [data-testid="column"]:nth-child(2){background: #d09292;}
-                [data-testid="stHorizontalBlock"] > [data-testid="column"]:nth-child(3){background: #c094cc;}
-                [data-testid="stHorizontalBlock"] > [data-testid="column"]:nth-child(4){background: #a2d0c0;}
-                [data-testid="stHorizontalBlock"] > [data-testid="column"]:nth-child(5){background: #c37892;}
-                [data-testid="stImage"]{margin:auto;}
-            </style>  
-        """,
-        unsafe_allow_html=True
-    )
-    st.sidebar.title('ภาษาของโปรแกรม / Application Language')
-    lang = st.sidebar.radio(
-        label='',
-        label_visibility='collapsed',
-        options=('ไทย', 'English'),
-        horizontal=True,
-        disabled=st.session_state.disabled_btn
-    )
-    if lang == 'ไทย':
-        diseaseName = ['โรคใบไหม้','โรคขอบใบแห้ง','โรคใบจุดสีน้ำตาล','โรคกาบใบแห้ง','โรคใบสีส้ม']
-        inputOption = ('รูปภาพ', 'วิดีโอ', 'กล้องเว็บแคม')
-    else:
-        diseaseName = ['Rice Blast','Bacterial Blight','BrownSpot','Sheath Blight','Tungro']
-        inputOption = ('Image', 'Video', 'Webcam Camera')
-    st.title(returnLang(
-            'โปรแกรมตรวจสอบโรคใบข้าวด้วย YOLOV5',
-            'Rice leaf disease detection with YOLOV5',
-            lang
-        )
-    )
-    st.sidebar.markdown('---')
-    st.sidebar.title(returnLang('ตั้งค่าโปรแกรม','Application Setting',lang))
-#! Confidence------------------------------
-    st.sidebar.header(returnLang('ค่าความเชื่อมั่น','Confidence',lang))
-    confidence = st.sidebar.slider(returnLang(
-        'เลือกค่าความเชื่อมั่นที่ต้องการ',
-        'Select your specific confidence.',
-        lang), 
-        min_value = 0.0, max_value = 1.0, value = 0.25,
-        disabled=st.session_state.disabled_btn    
-    )
-    modelForWebcam.conf = confidence
-#! Checkbox------------------------------        
-    custom_classes = st.sidebar.checkbox(returnLang('เลือกคลาสเฉพาะ','Use Specific Classes',lang))
-    assigned_class_id = []
-    if custom_classes:
-        if(lang == 'ไทย'):
-            assigned_class = st.sidebar.multiselect('เลือกโรคใบข้าวที่ต้องการให้ประมวลผล', list(diseaseName),default='โรคใบจุดสีน้ำตาล')
-        else:
-            assigned_class = st.sidebar.multiselect('Select the custom classes', list(diseaseName),default='BrownSpot')
-        for each in assigned_class:
-            assigned_class_id.append(diseaseName.index(each))
-    st.sidebar.markdown('---')
-#! Input Radio------------------------------
-    st.sidebar.header(returnLang('ประเภทข้อมูลที่ต้องการประมวลผล','Input Type',lang))
-    file_upload = st.sidebar.radio(
-            label='',
-            options=inputOption,
-            index=0,
-            label_visibility='collapsed',
-            key="multi_select",
-            disabled=st.session_state.disabled_btn
-        )
-
-#! Video------------------------------
-    if file_upload == 'Video' or file_upload == 'วิดีโอ':
-        video_file_buffer = st.sidebar.file_uploader(
-            returnLang('เลือก browse files หรือลากไฟล์ที่ต้องการไปที่กรอบสีดำด้านล่าง',
-            'Select browse files or drag and drop your files below.',lang), 
-            type=['mp4', 'mov', 'avi', 'asf', 'm4v'],
-            disabled=st.session_state.disabled_btn
-        )
-        tffile = tempfile.NamedTemporaryFile(suffix='.mp4', delete=False)
-        if not video_file_buffer:
-            demo_video = 'testBS.mov'
-            #vid = cv2.VideoCapture(demo_video)
-            st_video = open(demo_video, 'rb')
-            st.write(st_video.name)
-            video_path = st_video.name
-            use_demo_vid = True
-
-            #imgpath = os.path.join('data/uploads', 'testBS.mov')
-            #outputpath = os.path.join('data/video_output', os.path.basename(imgpath))
-        else:
-            tffile.write(video_file_buffer.read())
-            st_video = open(tffile.name, 'rb')
-            video_path = st_video.name
-            use_demo_vid = False
-        st.sidebar.video(st_video)
-        if use_demo_vid:
-            st.sidebar.warning(
-                returnLang('คุณกำลังใช้วิดีโอตัวอย่างในการประมวลผล',
-                    "You're using demo video for processing.",lang
-                ), icon="⚠️"
-            )
-            
-#! Image------------------------------
-    elif file_upload == 'Image' or file_upload == 'รูปภาพ':
-        image_file = st.sidebar.file_uploader(
-            returnLang('เลือก browse files หรือลากไฟล์ที่ต้องการไปที่กรอบสีดำด้านล่าง',
-            'Select browse files or drag and drop your files below.',lang), 
-            type=['jpeg','jpg','png'],
-        )
-        tffile = tempfile.NamedTemporaryFile(suffix='.jpg', delete=False)
-        if not image_file: 
-            image_file = Image.open('testBS.jpg')
-            image_file = image_file.resize((640,640))
-            use_demo_img = True
-        else: 
-            temp = image_file
-            image_file = Image.open(temp)
-            image_file = image_file.resize((640,640))
-            use_demo_img = False
-        st.write(image_file)
-        st.sidebar.header(returnLang('รูปแบบของรูปภาพ','Enhancing Image',lang))
-        enhance_type = st.sidebar.radio('', 
-            ['Original','Contrast','Brightness'],
-            label_visibility='collapsed'
-        )
-        if enhance_type == 'Contrast':
-            c_rate = st.sidebar.slider('Contrast',0.5,3.5, value=1.0)
-            st.sidebar.error(returnLang('** การปรับค่ารูปแบบของรูปภาพอาจส่งผลต่อความแม่นยำในการประมวลผลได้',
-                '** Enhancing image can effect processing accuracy.',
-                lang
-            ))
-            enhancer = ImageEnhance.Contrast(image_file)
-            image_file = enhancer.enhance(c_rate)
-        if use_demo_img:
-            st.sidebar.warning(
-                returnLang('คุณกำลังใช้ภาพตัวอย่างในการประมวลผล',
-                    "You're using demo image for processing.",lang
-                ), icon="⚠️"
-            )
-        st.sidebar.image(image_file)
-
-#! Webcam------------------------------
-    elif file_upload == 'Webcam Camera' or file_upload == 'กล้องเว็บแคม':
-        #webrtc_streamer(key="example")
-        #webrtc_streamer(key="example", video_frame_callback=video_frame_callback)
-        webrtc_ctx = webrtc_streamer(
-            key="active webcam",
-            mode=WebRtcMode.SENDRECV,
-            #rtc_configuration=RTC_CONFIGURATION,
-            video_frame_callback=predictWebcam,
-            media_stream_constraints={"video": True, "audio": False},
-           # async_processing=False,
-        )
-
-    st.sidebar.markdown('---')
-#! Process------------------------------
-    start_btn = st.sidebar.button(
-        returnLang('เริ่มต้นการประมวลผล','Start Processing',lang), 
-        disabled=st.session_state.disabled_btn,
-        key='process_btn',
-        on_click=disableBtn,
-        args=(file_upload, )
-    )
-    if start_btn:
-        col1, col2, col3, col4, col5 = st.columns(5)
-        with st.spinner(returnLang('กำลังประมวลผลวิดีโอ...','Processing Video...',lang)):
-            if file_upload == 'Image' or file_upload == 'รูปภาพ':
-                st.image(predictImage(image_file, confidence, assigned_class_id))
-            if file_upload == 'Video' or file_upload == 'วิดีโอ':
-                showDetectedVideo = st.empty()
-                showClassDetected = st.empty()
-                stop = st.button(
-                    'Stop Processing Video...',
-                    key='stop_btn',
-                    on_click = disableBtn,
-                    args = (file_upload, ),
-                    type = 'primary'
-                )
-                if(stop): 
-                    st.error('Stop processing !')
-                    st.session_state['disabled_btn '] = True
-                    st.experimental_rerun()
-                run(
-                    weights='N.pt', 
-                    source=video_path, 
-                    device='cpu', 
-                    showDetectedVideo=showDetectedVideo,
-                    showClassDetected=showClassDetected
-                ) 
-                st.session_state['disabled_btn '] = True
-                #st.session_state.disabled_btn = True
-            col1.write('Col1')
-            col2.write('Col2')
-            col3.write('Col3')
-            col4.write('Col4')
-            col5.write('Col5')
-    else:
-        if file_upload == 'Image' or file_upload == 'รูปภาพ':
-            st.image(image_file)
-        if file_upload == 'Video' or file_upload == 'วิดีโอ':
-            st.video(st_video)
-if __name__ == '__main__':
-    try: 
-        main()
-    except SystemExit:
-        pass
-
-# https://www.youtube.com/watch?v=mxRH275SyAU 17.40
-
-
-
-backgroudn COLUMN
-//#a4b6dd
-#d09292;
-#c094cc
-#a2d0c0
-
-
-
-            #! Show Class--------------------------------
-            if detectedClass:
-                #showDetected.header(detectedClass)
-                with detectedClassList[0]:
-                    st.header('Rice Blast')
-                with detectedClassList[1]:
-                    st.header('Bacterial Blight')
-                with detectedClassList[2]:
-                    st.header('Brown Spot')
-                with detectedClassList[3]:
-                    st.header('Sheath Blight')
-                with detectedClassList[4]:
-                    st.header('Tungro')
-                    st.header(detectedClass['Tungro'])
-
-
-
-                                        detectedCol = st.container()
-                    with detectedCol:
-                        blst, bb = st.columns(2)
-                        if detectedClass:
-                            with blst:
-                                blst.header('hello world')
-                    #showDetected.image()
-
-
-
-            with st.expander('Detected Class', True):
-                if showDetected != None: 
-                    with showDetected:
-                        st.image(im0, channels="BGR", use_column_width=True)
-                    with st.expander('BrownSpot', True):
-                        st.header('hello world')
-
-
-
-
-
- 
-
-
- #==========B4 session video
-
- from cgitb import enable
-import streamlit as st
-from streamlit_webrtc import webrtc_streamer, WebRtcMode, RTCConfiguration
-import av
-import tempfile
-import cv2
-import pandas as pd
-import numpy as np
-from PIL import Image, ImageEnhance
-import os  
-import torch
-#from detect import detect
-from yolov5.detect import run
-import json
-#! Check----------------------
-'''
-    - ดูภาษาตอน Process     
-'''
-
-#!----------------------
-modelForWebcam = torch.hub.load('yolov5', 'custom', path='M.pt', _verbose=False, source='local')
+detectedClass = []
+detectedDict = {}
 #! State------------------------------
-if 'disabled_btn' not in st.session_state:
-    st.session_state.disabled_btn = False
-
-if 'break_video' not in st.session_state:
-    st.session_state.break_video = False
-
-st.cache()
-def local_css(file_name):
-    with open(file_name) as f:
-        st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
-def load_image(img):
-    im = Image.open(img)
-    return im
-def returnLang(thai, eng, lang):
-    if(lang == 'ไทย'):
-         return thai
-    else:
-        return eng
-def predictImage(image_file, confidence, classes):
-    run(
-        weights='M.pt', 
-        source=image_file, 
-        device='cpu', 
-        conf_thres=confidence,
-        classes=classes,
-        imgsz=(640, 640)
-    ) 
-
+if 'use_program' not in st.session_state:
+    st.session_state.use_program = False
+if 'view_ricedata' not in st.session_state:
+    st.session_state.view_ricedata = False
+result_queue = (queue.Queue())
 def predictWebcam(frame):
-    img = frame.to_ndarray(format="bgr24")
-   # flipped = img[:, ::-1, :]
-   # im_pil = Image.fromarray(flipped)
-    results = modelForWebcam(img, size=640)
+    global detectedDict
+    img = frame.to_rgb()
+    img = img.to_ndarray() #Converet video frame to array
+    results = modelForWebcam(img, size=(300,300))
     bbox_img = np.array(results.render()[0])
-    return av.VideoFrame.from_ndarray(bbox_img, format="bgr24")
-
-def disableBtn(uplType:str):
-    if uplType == 'Video' or uplType == 'วิดีโอ':
-        st.session_state.disabled_btn = not st.session_state.disabled_btn 
-        st.session_state.break_video = False
-
-def breakVideo(uplType:str):
-    if uplType == 'Video' or uplType == 'วิดีโอ':
-        st.session_state.disabled_btn = not st.session_state.disabled_btn 
-        st.session_state.break_video = not st.session_state.break_video
+    result_queue.put(results)
+    return av.VideoFrame.from_ndarray(bbox_img)
+    """ 
+    json = results.pandas().xyxy[0].to_dict(orient='list')
+    detectedClass = json['class']
+    detectedDict = {i:detectedClass.count(i) for i in detectedClass} 
+    bbox_img = np.array(results.render()[0])
+    return av.VideoFrame.from_ndarray(bbox_img, format="bgr24")"""
+def chooseUseProgram():
+    st.session_state.use_program = True
+    st.session_state.view_ricedata = False
+def chooseViewRicedata():
+    st.session_state.use_program = False
+    st.session_state.view_ricedata = True
 def main():
-    st.markdown(
-        """
-            <style>
-                #MainMenu {visibility: hidden;}
-                .css-af4qln h3{color: #e16060; font-size:14px; padding:0;}
-                .e16nr0p31 h2{padding-bottom:0;}
-                .streamlit-expanderHeader{font-size:1.5rem;}
-                label{color: #ff4b4b !important;}
-                [data-testid="stSidebar"][aria-expanded="true"]{width:400px !important;}
-                [data-testid="stSidebar"][aria-expanded="true"] > div:first-child{width:400px;}
-                [data-testid="column"]{    
-                    min-height: 100px;
-                    border-radius: 8px;
-                }
-                [data-testid="stHorizontalBlock"] > [data-testid="column"]:first-child{background: #ff9897;} 
-                [data-testid="stHorizontalBlock"] > [data-testid="column"]:nth-child(2){background: #feb2ac;}
-                [data-testid="stHorizontalBlock"] > [data-testid="column"]:nth-child(3){background: #f6a576;}
-                [data-testid="stHorizontalBlock"] > [data-testid="column"]:nth-child(4){background: #f2c46b;}
-                [data-testid="stHorizontalBlock"] > [data-testid="column"]:nth-child(5){background: #ced05d;}
-                [data-testid="stImage"]{margin:auto;}
-                .st-ic > div > div > div > p{font-size:1.8rem;}
-            </style>  
-        """,
-        unsafe_allow_html=True
-    )
-    print('================================hellllllllo worldddddd======================')
-    st.sidebar.title('ภาษาของโปรแกรม / Application Language')
-    lang = st.sidebar.radio(
-        label='',
-        label_visibility='collapsed',
-        options=('ไทย', 'English'),
-        horizontal=True,
-        disabled=st.session_state.disabled_btn
-    )
-    if lang == 'ไทย':
-        diseaseName = ['โรคใบไหม้','โรคขอบใบแห้ง','โรคใบจุดสีน้ำตาล','โรคกาบใบแห้ง','โรคใบสีส้ม']
-        inputOption = ('รูปภาพ', 'วิดีโอ', 'กล้องเว็บแคม')
-    else:
-        diseaseName = ['Rice Blast','Bacterial Blight','BrownSpot','Sheath Blight','Tungro']
-        inputOption = ('Image', 'Video', 'Webcam Camera')
-    st.title(returnLang(
-            'โปรแกรมตรวจสอบโรคใบข้าวด้วย YOLOV5',
-            'Rice leaf disease detection with YOLOV5',
-            lang
+#!---- Styling-------------
+    with open('style.css') as f:
+        st.markdown(f'<style>{f.read()}</style>',unsafe_allow_html=True)
+    diseaseName = ['โรคไหม้','โรคขอบใบแห้ง','โรคใบจุดสีน้ำตาล','โรคกาบใบแห้ง','โรคใบสีส้ม']
+    inputOption = ('รูปภาพ', 'วิดีโอ', 'กล้องถ่ายรูป','กล้องเว็บแคม')
+    title = st.empty()
+    title.title('โปรแกรมตรวจสอบโรคใบข้าว')
+    if not st.session_state.use_program and not st.session_state.view_ricedata: #TODO default when start program -----
+        st.button('ใช้โปรแกรมตรวจสอบโรคใบข้าว', on_click=chooseUseProgram)
+        st.button('ดูข้อมูลโรคใบข้าว', on_click=chooseViewRicedata)
+    elif not st.session_state.use_program:
+        st.button('ใช้โปรแกรมตรวจสอบโรคใบข้าว', on_click=chooseUseProgram)
+        title.title('ข้อมูลโรคข้าว(แบ่งตามหมวดหมู่สาเหตุการเกิดโรค)')
+    if st.session_state.use_program:
+        st.markdown('''
+        <a class="toggle" href="
+            javascript:document.getElementsByClassName('css-4l4x4v edgvbvh3')[1].click();
+            javascript:document.getElementsByClassName('css-4l4x4v edgvbvh3')[4].click();    
+        " target="_self">ตั้งค่าโปรแกรม</a>
+        ''', unsafe_allow_html=True)
+        if not st.session_state.view_ricedata:
+            st.sidebar.button('ดูข้อมูลโรคใบข้าว', on_click=chooseViewRicedata)
+        st.sidebar.markdown(f'<h4 class="option">ตั้งค่าโปรแกรม</h4>', unsafe_allow_html=True) 
+        #! Get Confidence------------------------------------------------------------------------------------------------------------------------
+        st.sidebar.header('ค่าความเชื่อมั่น')
+        confidence = st.sidebar.slider(
+            'เลือกค่าความเชื่อมั่นที่ต้องการ',
+            min_value = 0.0, max_value = 1.0, value = 0.354,
         )
-    )
-    st.sidebar.markdown('---')
-    st.sidebar.title(returnLang('ตั้งค่าโปรแกรม','Application Setting',lang))
-#! Confidence------------------------------
-    st.sidebar.header(returnLang('ค่าความเชื่อมั่น','Confidence',lang))
-    confidence = st.sidebar.slider(returnLang(
-        'เลือกค่าความเชื่อมั่นที่ต้องการ',
-        'Select your specific confidence.',
-        lang), 
-        min_value = 0.0, max_value = 1.0, value = 0.25,
-        disabled=st.session_state.disabled_btn    
-    )
-    modelForWebcam.conf = confidence
-#! Checkbox------------------------------        
-    custom_classes = st.sidebar.checkbox(returnLang('เลือกคลาสเฉพาะ','Use Specific Classes',lang))
-    assigned_class_id = []
-    if custom_classes:
-        if(lang == 'ไทย'):
+        st.sidebar.markdown('''
+        <p style="color: red;">ค่าความเชื่อมั่นที่เลือกจะส่งผลต่อการตรวจพบโรคใบข้าว และความถูกต้องของการประมวลผล</p>''', unsafe_allow_html=True)
+        modelForImage.conf = confidence
+        modelForWebcam.conf = confidence
+
+        #! Get Specific Class------------------------------------------------------------------------------------------------------------------------        
+        custom_classes = st.sidebar.checkbox('เลือกคลาสเฉพาะ')
+        assigned_class_id = []
+        if custom_classes:
             assigned_class = st.sidebar.multiselect('เลือกโรคใบข้าวที่ต้องการให้ประมวลผล', list(diseaseName),default='โรคใบจุดสีน้ำตาล')
-        else:
-            assigned_class = st.sidebar.multiselect('Select the custom classes', list(diseaseName),default='BrownSpot')
-        for each in assigned_class:
-            assigned_class_id.append(diseaseName.index(each))
-    st.sidebar.markdown('---')
-#! Input Radio------------------------------
-    st.sidebar.header(returnLang('ประเภทข้อมูลที่ต้องการประมวลผล','Input Type',lang))
-    file_upload = st.sidebar.radio(
-            label='',
-            options=inputOption,
-            index=0,
-            label_visibility='collapsed',
-            key="multi_select",
-            disabled=st.session_state.disabled_btn
-        )
+            for each in assigned_class:
+                assigned_class_id.append(diseaseName.index(each))
+            if(len(assigned_class_id)):
+                modelForImage.classes = assigned_class_id
+        st.sidebar.markdown('---')
 
-#! Video------------------------------
-    if file_upload == 'Video' or file_upload == 'วิดีโอ':
-        process_type = 'video'
-        video_file_buffer = st.sidebar.file_uploader(
-            returnLang('เลือก browse files หรือลากไฟล์ที่ต้องการไปที่กรอบสีดำด้านล่าง',
-            'Select browse files or drag and drop your files below.',lang), 
-            type=['mp4', 'mov', 'avi', 'asf', 'm4v'],
-            disabled=st.session_state.disabled_btn
-        )
-        tffile = tempfile.NamedTemporaryFile(suffix='.mp4', delete=False)
-        if not video_file_buffer:
-            demo_video = 'testBS.mov'
-            #vid = cv2.VideoCapture(demo_video)
-            st_video = open(demo_video, 'rb')
-            st.write(st_video.name)
-            video_path = st_video.name
-            use_demo_vid = True
-
-            #imgpath = os.path.join('data/uploads', 'testBS.mov')
-            #outputpath = os.path.join('data/video_output', os.path.basename(imgpath))
-        else:
-            tffile.write(video_file_buffer.read())
-            st_video = open(tffile.name, 'rb')
-            video_path = st_video.name
-            use_demo_vid = False
-        st.sidebar.video(st_video)
-        if use_demo_vid:
-            st.sidebar.warning(
-                returnLang('คุณกำลังใช้วิดีโอตัวอย่างในการประมวลผล',
-                    "You're using demo video for processing.",lang
-                ), icon="⚠️"
+        #! Get Input Type------------------------------------------------------------------------------------------------------------------------
+        st.sidebar.header('ประเภทข้อมูลที่ต้องการประมวลผล')
+        file_upload = st.sidebar.radio(
+                label='',
+                options=inputOption,
+                index=0,
+                label_visibility='collapsed',
+                key="multi_select",
             )
-            
-#! Image------------------------------
-    elif file_upload == 'Image' or file_upload == 'รูปภาพ':
-        process_type = 'image'
-        image_file = st.sidebar.file_uploader(
-            returnLang('เลือก browse files หรือลากไฟล์ที่ต้องการไปที่กรอบสีดำด้านล่าง',
-            'Select browse files or drag and drop your files below.',lang), 
-            type=['jpeg','jpg','png'],
-        )
-        tffile = tempfile.NamedTemporaryFile(suffix='.jpg', delete=False)
-        if not image_file: 
-            image_file = Image.open('testBS.jpg')
-            image_file_name = image_file.filename
-            use_demo_img = True
-        else: 
-            tffile.write(image_file.read())
-            temp_img = open(tffile.name, 'rb')
-            image_file_name = temp_img.name
-            use_demo_img = False
-        st.sidebar.header(returnLang('รูปแบบของรูปภาพ','Enhancing Image',lang))
-        enhance_type = st.sidebar.radio('', 
-            ['Original','Contrast','Brightness'],
-            label_visibility='collapsed'
-        )
-        if enhance_type == 'Contrast':
-            c_rate = st.sidebar.slider('Contrast',0.5,3.5, value=1.0)
-            st.sidebar.error(returnLang('** การปรับค่ารูปแบบของรูปภาพอาจส่งผลต่อความแม่นยำในการประมวลผลได้',
-                '** Enhancing image can effect processing accuracy.',
-                lang
-            ))
-            enhancer = ImageEnhance.Contrast(image_file)
-            image_file = enhancer.enhance(c_rate)
-        if use_demo_img:
-            st.sidebar.warning(
-                returnLang('คุณกำลังใช้ภาพตัวอย่างในการประมวลผล',
-                    "You're using demo image for processing.",lang
-                ), icon="⚠️"
+
+        #! Get Video------------------------------------------------------------------------------------------------------------------------
+        if file_upload == 'วิดีโอ':
+            process_type = 'วิดีโอ'
+            video_file_buffer = st.sidebar.file_uploader(
+                'เลือก browse files หรือลากไฟล์ที่ต้องการไปที่กรอบด้านล่าง', 
+                type=['mp4', 'mov', 'avi', 'asf', 'm4v'],
             )
-        st.sidebar.image(image_file)
-
-#! Webcam------------------------------
-    elif file_upload == 'Webcam Camera' or file_upload == 'กล้องเว็บแคม':
-        process_type = 'webcam'
-        #webrtc_streamer(key="example")
-        #webrtc_streamer(key="example", video_frame_callback=video_frame_callback)
-        webrtc_ctx = webrtc_streamer(
-            key="active webcam",
-            mode=WebRtcMode.SENDRECV,
-            #rtc_configuration=RTC_CONFIGURATION,
-            video_frame_callback=predictWebcam,
-            media_stream_constraints={"video": True, "audio": False},
-           # async_processing=False,
-        )
-
-    st.sidebar.markdown('---')
-#! Process------------------------------
-    start_btn = st.sidebar.button(
-        returnLang('เริ่มต้นการประมวลผล','Start Processing',lang), 
-        disabled=st.session_state.disabled_btn,
-        key='process_btn',
-        on_click=disableBtn,
-        args=(file_upload, )
-    )
+            tffile = tempfile.NamedTemporaryFile(suffix='.mp4', delete=False)
+            if not video_file_buffer:
+                #demo_video = 'testBS.mov'
+                demo_video = 'testVideo.mov'
+                st_video = open(demo_video, 'rb')
+                video_path = st_video.name
+                st.sidebar.warning('คุณกำลังใช้วิดีโอตัวอย่างในการประมวลผล\n วิดีโอตัวอย่างจาก: https://youtube.com/shorts/j0vYXSlMaEQ?feature=share', icon="⚠️")
                 
-    st.write(st.session_state.break_video)
-    if start_btn:
-        with st.spinner(returnLang(f'กำลังประมวลผล{process_type}...',f'Processing {process_type}...',lang)):
-            #! Image------------------------------
-            if file_upload == 'Image' or file_upload == 'รูปภาพ':
-                if len(assigned_class_id) > 0:
-                    run(
-                        weights='M.pt', 
-                        source=image_file_name, 
-                        device='cpu', 
-                        classes=assigned_class_id,
-                        conf_thres=confidence,
-                    ) 
-                else:
-                    run(
-                        weights='M.pt', 
-                        source=image_file_name, 
-                        device='cpu', 
-                        conf_thres=confidence,
-                    ) 
-            #! Video------------------------------
-            if file_upload == 'Video' or file_upload == 'วิดีโอ':
-                stop = st.button(
-                    'Stop Processing Video...',
-                    key='stop_btn',
-                    on_click = breakVideo,
-                    args = (file_upload, ),
-                    type = 'primary'
-                )
-                #if(stop): 
-                #    st.error('Stop processing !')
-                #    st.session_state['disabled_btn '] = True
-                #    st.experimental_rerun()
-                run(
-                    weights='N.pt', 
-                    source=video_path, 
-                    device='cpu', 
-                    breakVideo=st.session_state.break_video
-                ) 
-                st.session_state['disabled_btn '] = True
-                #st.session_state.disabled_btn = True
-    else:
-        if file_upload == 'Image' or file_upload == 'รูปภาพ':
-            st.image(image_file)
-        if file_upload == 'Video' or file_upload == 'วิดีโอ':
-            st.video(st_video)
-if __name__ == '__main__':
-    try: 
-        main()
-    except SystemExit:
-        pass
+            else:
+                tffile.write(video_file_buffer.read())
+                st_video = open(tffile.name, 'rb')
+                video_path = st_video.name
+            emptyVideo = st.empty()
+            st.sidebar.video(st_video)
+            emptyVideo.video(st_video)
+                
+        #! Get Image------------------------------------------------------------------------------------------------------------------------
+        elif file_upload == 'รูปภาพ':
+            process_type = 'รูปภาพ'
+            image_file = st.sidebar.file_uploader(
+                'เลือก browse files หรือลากไฟล์ที่ต้องการไปที่กรอบด้านล่าง', 
+                type=['jpeg','jpg','png','webp'],
+            )
+            tffile = tempfile.NamedTemporaryFile(suffix='.jpg', delete=False)
+            if not image_file: 
+                image_file = Image.open('3CLASS.png')
+                pilImg = image_file
+                image_file = image_file.filename
+                st.sidebar.warning('คุณกำลังใช้ภาพตัวอย่างในการประมวลผล \n รูปภาพตัวอย่างจาก: https://d3i71xaburhd42.cloudfront.net/81a657cd7152727efae9e8ecba974afd652ec503/250px/2-Figure2-1.png', icon="⚠️")
+            else: 
+                tffile.write(image_file.read())
+                temp_img = open(tffile.name, 'rb')
+                pilImg = Image.open(temp_img)
+                image_file = temp_img.name
+            st.sidebar.header('รูปแบบของการปรับปรุงรูปภาพ','Enhancing Image')
+            enhance_type = st.sidebar.radio('', 
+                ['Original (ภาพดั้งเดิม)','Contrast (ปรับความคมชัดของสีในภาพ)','Brightness (ปรับความสว่างของภาพ)'],
+                label_visibility='collapsed'
+            )
+            if enhance_type == 'Contrast (ปรับความคมชัดของสีในภาพ)':
+                c_rate = st.sidebar.slider('Contrast',0.5,3.5, value=1.0)
+                st.sidebar.error('** การปรับค่ารูปแบบของรูปภาพอาจส่งผลต่อความแม่นยำในการประมวลผลได้')
+                enhancer = ImageEnhance.Contrast(pilImg)
+                image_file = enhancer.enhance(c_rate)
+            if enhance_type == 'Brightness (ปรับความสว่างของภาพ)':
+                b_rate = st.sidebar.slider('Brightness',0.5,3.5, value=1.0)
+                st.sidebar.error('** การปรับค่าความสว่างของรูปภาพอาจส่งผลต่อความแม่นยำในการประมวลผลได้')
+                enhancer = ImageEnhance.Brightness(pilImg)
+                image_file = enhancer.enhance(b_rate)
+            st.sidebar.image(image_file)
+            showImage = st.empty()
+            showImage.image(image_file)
 
-# https://www.youtube.com/watch?v=mxRH275SyAU 17.40
+        #! Get Webcam Image Capture------------------------------------------------------------------------------------------------------------------------
+        elif file_upload == 'กล้องถ่ายรูป':
+            img_capture = st.camera_input("", label_visibility='collapsed') 
+            if not img_capture:
+                components.html('''
+                    <script>
+                        const strlit = window.parent.document;
+                        let btnClass = strlit.querySelector('.ejtjsn20')
+                        btnClass.innerHTML = 'ถ่ายรูปเพื่อประมวลผล';
+                    </script>
+                    ''', height=5,)
+            if img_capture: 
+                components.html('''
+                <script>
+                    const strlit = window.parent.document;
+                    let btnClass = strlit.querySelector('.ejtjsn20')
+                    btnClass.innerHTML = 'ถ่ายรูปใหม่';
+                </script>
+                ''', height=5,)
+                st.markdown('----')
+                st.markdown(f'<h4>ผลการประมวลผลภาพถ่าย:</h4>', unsafe_allow_html=True) 
+                camera = st.empty()
+                process_type = 'กล้องถ่ายรูป'
+                tffile = tempfile.NamedTemporaryFile(suffix='.jpg', delete=False)
+                tffile.write(img_capture.read())
+                temp_img = open(tffile.name, 'rb')
+                pilImg = Image.open(temp_img)
+                image_file = temp_img.name
+                camera.image(img_capture)  
+
+                st.sidebar.header('รูปแบบของการปรับปรุงรูปภาพ','Enhancing Image')
+                enhance_type = st.sidebar.radio('', 
+                    ['Original (ภาพดั้งเดิม)','Contrast (ปรับความคมชัดของสีในภาพ)','Brightness (ปรับความสว่างของภาพ)'],
+                    label_visibility='collapsed'
+                )
+                if enhance_type == 'Contrast (ปรับความคมชัดของสีในภาพ)':
+                    c_rate = st.sidebar.slider('Contrast',0.5,3.5, value=1.0)
+                    st.sidebar.error('** การปรับค่ารูปแบบของรูปภาพอาจส่งผลต่อความแม่นยำในการประมวลผลได้')
+                    enhancer = ImageEnhance.Contrast(pilImg)
+                    image_file = enhancer.enhance(c_rate)
+                if enhance_type == 'Brightness (ปรับความสว่างของภาพ)':
+                    b_rate = st.sidebar.slider('Brightness',0.5,3.5, value=1.0)
+                    st.sidebar.error('** การปรับค่าความสว่างของรูปภาพอาจส่งผลต่อความแม่นยำในการประมวลผลได้')
+                    enhancer = ImageEnhance.Brightness(pilImg)
+                    image_file = enhancer.enhance(b_rate)
+                st.sidebar.image(image_file)
+        #! Get Webcam------------------------------------------------------------------------------------------------------------------------
+        elif file_upload == 'กล้องเว็บแคม':
+            process_type = 'กล้องเว็บแคม'
+        st.sidebar.markdown('---')
+
+        #! Process Start------------------------------------------------------------------------------------------------------------------------
+        #TODO Sidebar----
+        if file_upload != 'กล้องเว็บแคม' and file_upload != 'กล้องถ่ายรูป':
+            start_btn = st.sidebar.button('เริ่มต้นการประมวลผล', key='process_btn')
+            emptyStartBtn = st.empty()
+            start_mobile_btn = emptyStartBtn.button(
+                'เริ่มต้นการประมวลผล',
+                key='process_btn1'
+            )
+        st.sidebar.markdown('''
+        <a class="toggle" href="
+            javascript:document.getElementsByClassName('css-4l4x4v edgvbvh3')[1].click();  
+        " target="_self">สิ้นสุดการตั้งค่าโปรแกรม</a>
+        ''', unsafe_allow_html=True)
+        if  file_upload == 'กล้องเว็บแคม' or \
+            (file_upload == 'กล้องถ่ายรูป' and img_capture) or \
+            (file_upload != 'กล้องถ่ายรูป' and start_btn) or \
+            (file_upload != 'กล้องถ่ายรูป' and start_mobile_btn):
+            with st.spinner(f'กำลังประมวลผล{process_type}...'):
+
+        #! Process Image------------------------------------------------------------------------------------------------------------------------
+                if file_upload == 'รูปภาพ' or file_upload == 'กล้องถ่ายรูป':
+                    if len(assigned_class_id) > 0:
+                        modelForImage.classes = assigned_class_id
+                    result = modelForImage(image_file, size=640)
+                    if result:
+                        json = result.pandas().xyxy[0].to_dict(orient='list')
+                        detectedClass = json['class']
+                        detectedDict = {i:detectedClass.count(i) for i in detectedClass}
+                        r_img = result.render()
+                        if file_upload == 'กล้องถ่ายรูป':
+                            camera.image(r_img)
+                        else: showImage.image(r_img)
+
+        #! Process Video------------------------------------------------------------------------------------------------------------------------
+                #https://youtube.com/shorts/j0vYXSlMaEQ?feature=share
+                elif file_upload == 'วิดีโอ':
+                    stop = st.empty()
+                    temp = stop.button(
+                        'หยุดการประมวลผลวิดีโอ...',
+                        key='stop_btn',
+                        type = 'primary',
+                    )
+                    if not temp:
+                        weight = 'weight/n-last.pt'  #weight = 'weight/n-last1.pt'
+                        emptyVideo.empty()
+                        emptyStartBtn.empty()
+                        if len(assigned_class_id) > 0:
+                            run(
+                                weights=weight, 
+                                source=video_path, 
+                                device='cpu', 
+                                conf_thres=confidence,
+                                classes=assigned_class_id,
+                            ) 
+                        else:
+                            run(
+                                weights=weight, 
+                                source=video_path, 
+                                device='cpu', 
+                                conf_thres=confidence,
+                            )  
+                    else:
+                        stop.empty()
+
+        #! Process Webcam Camera------------------------------------------------------------------------------------------------------------------------
+                elif file_upload == 'กล้องเว็บแคม':          
+                    showStreamResult = st.sidebar.checkbox('แสดงข้อมูลโรคใบข้าวระหว่างประมวลผลด้วยกล้องเว็บแคม')
+                    if showStreamResult: st.sidebar.warning('โปรดระวัง!! ข้อมูลที่แสดงผลระหว่างการประมวลผลด้วยกล้องเว็บแคมอาจมีความไม่ต่อเนื่อง', icon="⚠️")
+                    translations={
+                        "start": "เริ่มต้นการประมวลผล",
+                        "stop": "หยุดการประมวลผล",
+                        "select_device": "เลือกอุปกรณ์",
+                    }
+                    stream = webrtc_streamer(
+                        key="webcam_process", 
+                        video_frame_callback=predictWebcam,
+                        rtc_configuration=rtc_configuration,
+                        media_stream_constraints={"video": True, "audio": False},
+                        translations=translations,
+                        async_processing=True
+                    )
+                    if showStreamResult and stream.state.playing:
+                        emptyCamResult = st.empty()
+                        while True:
+                            try:
+                                result = result_queue.get(timeout=1.0)        
+                            except queue.Empty:
+                                result = {}                     
+                            if result != {}:
+                                json = result.pandas().xyxy[0].to_dict(orient='list')
+                                detectedClass = json['class']
+                                detectedDict = {i:detectedClass.count(i) for i in detectedClass}  
+                                with emptyCamResult:
+                                    showResult(detectedDict, detectedClass, file_upload)
+                            else:
+                                emptyCamResult.write('no detected')
+                                                
+        #! Detected Result------------------------------------------------------------------------------------------------------------------------
+            if (file_upload == 'รูปภาพ' and (start_btn or start_mobile_btn)) or (file_upload == 'กล้องถ่ายรูป' and img_capture):
+                with st.container():
+                    showResult(detectedDict,detectedClass, file_upload)
+    elif st.session_state.view_ricedata: showResult(showDetected=False)
+if __name__ == '__main__':
+    try:
+        main()
+    except Exception as e:
+        st.write(e)
+        st.markdown('<div class="err-container"> \
+            <h1 clas="err-header">Whoooops</h1> \
+            <p class="err-text">looks like something went wrong Please try again rather.</p> \
+        </div>',unsafe_allow_html=True)                      

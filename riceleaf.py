@@ -21,8 +21,8 @@ rtc_configuration = {
         {'urls':['stun:stun.l.google.com:19302']}
     ]
 }
-modelForImage = torch.hub.load('yolov5', 'custom', path='weight/best (15).pt', _verbose=False, source='local')
-modelForWebcam = torch.hub.load('yolov5', 'custom', path='weight/N.pt', _verbose=False, source='local')
+modelForImage = torch.hub.load('yolov5', 'custom', path='weight/best__1.pt', _verbose=False, source='local')
+modelForWebcam = torch.hub.load('yolov5', 'custom', path='weight/best.pt', _verbose=False, source='local')
 
 detectedClass = []
 detectedDict = {}
@@ -62,9 +62,9 @@ def main():
     title.title('โปรแกรมตรวจสอบโรคใบข้าว')
     if not st.session_state.use_program and not st.session_state.view_ricedata: #TODO default when start program -----
         st.button('ใช้โปรแกรมตรวจสอบโรคใบข้าว', on_click=chooseUseProgram)
-        st.button('ดูข้อมูลโรคข้าว', on_click=chooseViewRicedata)
+        st.button('ดูข้อมูลโรคใบข้าว', on_click=chooseViewRicedata)
     elif not st.session_state.use_program:
-        st.button('ใช้โปรแกรมตรวจสอบผลโรคใบข้าว', on_click=chooseUseProgram)
+        st.button('ใช้โปรแกรมตรวจสอบโรคใบข้าว', on_click=chooseUseProgram)
         title.title('ข้อมูลโรคข้าว(แบ่งตามหมวดหมู่สาเหตุการเกิดโรค)')
     if st.session_state.use_program:
         st.markdown('''
@@ -74,7 +74,7 @@ def main():
         " target="_self">ตั้งค่าโปรแกรม</a>
         ''', unsafe_allow_html=True)
         if not st.session_state.view_ricedata:
-            st.sidebar.button('ดูข้อมูลโรคข้าว', on_click=chooseViewRicedata)
+            st.sidebar.button('ดูข้อมูลโรคใบข้าว', on_click=chooseViewRicedata)
         st.sidebar.markdown(f'<h4 class="option">ตั้งค่าโปรแกรม</h4>', unsafe_allow_html=True) 
         #! Get Confidence------------------------------------------------------------------------------------------------------------------------
         st.sidebar.header('ค่าความเชื่อมั่น')
@@ -117,11 +117,11 @@ def main():
             )
             tffile = tempfile.NamedTemporaryFile(suffix='.mp4', delete=False)
             if not video_file_buffer:
-                #demo_video = 'testBS.mov'
-                demo_video = 'TestVideoNew.mov'
+                demo_video = 'testVideo.mov'
                 st_video = open(demo_video, 'rb')
                 video_path = st_video.name
-                st.sidebar.warning('คุณกำลังใช้วิดีโอตัวอย่างในการประมวลผล', icon="⚠️")
+                st.sidebar.warning('คุณกำลังใช้วิดีโอตัวอย่างในการประมวลผล\n วิดีโอตัวอย่างจาก: https://youtube.com/shorts/j0vYXSlMaEQ?feature=share', icon="⚠️")
+                
             else:
                 tffile.write(video_file_buffer.read())
                 st_video = open(tffile.name, 'rb')
@@ -142,7 +142,7 @@ def main():
                 image_file = Image.open('3CLASS.png')
                 pilImg = image_file
                 image_file = image_file.filename
-                st.sidebar.warning('คุณกำลังใช้ภาพตัวอย่างในการประมวลผล', icon="⚠️")
+                st.sidebar.warning('คุณกำลังใช้ภาพตัวอย่างในการประมวลผล \n รูปภาพตัวอย่างจาก: https://d3i71xaburhd42.cloudfront.net/81a657cd7152727efae9e8ecba974afd652ec503/250px/2-Figure2-1.png', icon="⚠️")
             else: 
                 tffile.write(image_file.read())
                 temp_img = open(tffile.name, 'rb')
@@ -196,6 +196,23 @@ def main():
                 pilImg = Image.open(temp_img)
                 image_file = temp_img.name
                 camera.image(img_capture)  
+
+                st.sidebar.header('รูปแบบของการปรับปรุงรูปภาพ','Enhancing Image')
+                enhance_type = st.sidebar.radio('', 
+                    ['Original (ภาพดั้งเดิม)','Contrast (ปรับความคมชัดของสีในภาพ)','Brightness (ปรับความสว่างของภาพ)'],
+                    label_visibility='collapsed'
+                )
+                if enhance_type == 'Contrast (ปรับความคมชัดของสีในภาพ)':
+                    c_rate = st.sidebar.slider('Contrast',0.5,3.5, value=1.0)
+                    st.sidebar.error('** การปรับค่ารูปแบบของรูปภาพอาจส่งผลต่อความแม่นยำในการประมวลผลได้')
+                    enhancer = ImageEnhance.Contrast(pilImg)
+                    image_file = enhancer.enhance(c_rate)
+                if enhance_type == 'Brightness (ปรับความสว่างของภาพ)':
+                    b_rate = st.sidebar.slider('Brightness',0.5,3.5, value=1.0)
+                    st.sidebar.error('** การปรับค่าความสว่างของรูปภาพอาจส่งผลต่อความแม่นยำในการประมวลผลได้')
+                    enhancer = ImageEnhance.Brightness(pilImg)
+                    image_file = enhancer.enhance(b_rate)
+                st.sidebar.image(image_file)
         #! Get Webcam------------------------------------------------------------------------------------------------------------------------
         elif file_upload == 'กล้องเว็บแคม':
             process_type = 'กล้องเว็บแคม'
@@ -210,6 +227,11 @@ def main():
                 'เริ่มต้นการประมวลผล',
                 key='process_btn1'
             )
+        st.sidebar.markdown('''
+        <a class="toggle" href="
+            javascript:document.getElementsByClassName('css-4l4x4v edgvbvh3')[1].click();  
+        " target="_self">สิ้นสุดการตั้งค่าโปรแกรม</a>
+        ''', unsafe_allow_html=True)
         if  file_upload == 'กล้องเว็บแคม' or \
             (file_upload == 'กล้องถ่ายรูป' and img_capture) or \
             (file_upload != 'กล้องถ่ายรูป' and start_btn) or \
@@ -231,6 +253,7 @@ def main():
                         else: showImage.image(r_img)
 
         #! Process Video------------------------------------------------------------------------------------------------------------------------
+                #https://youtube.com/shorts/j0vYXSlMaEQ?feature=share
                 elif file_upload == 'วิดีโอ':
                     stop = st.empty()
                     temp = stop.button(
@@ -239,11 +262,12 @@ def main():
                         type = 'primary',
                     )
                     if not temp:
+                        weight = 'weight/best.pt' 
                         emptyVideo.empty()
                         emptyStartBtn.empty()
                         if len(assigned_class_id) > 0:
                             run(
-                                weights='weight/N.pt', 
+                                weights=weight, 
                                 source=video_path, 
                                 device='cpu', 
                                 conf_thres=confidence,
@@ -251,7 +275,7 @@ def main():
                             ) 
                         else:
                             run(
-                                weights='weight/N.pt', 
+                                weights=weight, 
                                 source=video_path, 
                                 device='cpu', 
                                 conf_thres=confidence,
@@ -300,7 +324,6 @@ def main():
 if __name__ == '__main__':
     try:
         main()
-
     except Exception as e:
         st.write(e)
         st.markdown('<div class="err-container"> \

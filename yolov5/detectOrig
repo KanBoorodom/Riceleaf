@@ -198,7 +198,7 @@ def run(
                             st.markdown('<h4 class="h4-success">ตรวจพบโรคใบข้าว</h4>', unsafe_allow_html=True)  
                             #! Leaf Blast----------------------------------
                             if 'Leaf Blast' in detectedClass:
-                                with st.expander(f'ตรวจพบโรคใบไหม้ทั้งหมด: {detectedClass["Leaf Blast"]} ตำแหน่ง',True):
+                                with st.expander(f'ตรวจพบโรคไหม้ทั้งหมด: {detectedClass["Leaf Blast"]} ตำแหน่ง',True):
                                     st.markdown(f'<h4 class="tab-subhead">โรคไหม้ (Rice Blast Disease)</h4>', unsafe_allow_html=True)
                                     st.markdown('<hr>',unsafe_allow_html=   True)  
                                     tab1,tab2,tab3,tab4,tab5 = st.tabs(['สาเหตุของโรคและภูมิภาคที่พบ','อาการของโรค','การแพร่ระบาด','การป้องกัน','ข้อควรระวัง'])

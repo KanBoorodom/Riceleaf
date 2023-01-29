@@ -42,6 +42,9 @@ def showResult(detectedDict='',detectedClass='', file_upload='',showDetected=Tru
                         with tab5:
                             st.markdown('<p class="indent"> ข้าวพันธุ์สุพรรณบุรี 1 สุพรรณบุรี 60 และชัยนาท 1 ที่ปลูกในภาคเหนือตอนล่าง พบว่าแสดงอาการรุนแรงในบางพื้นที่ และบางปี โดยเฉพาะเมื่อสภาพแวดล้อมเอื้ออำนวย เช่น ฝนพรำ หรือหมอก น้ำค้างจัด อากาศเย็น ใส่ปุ๋ยมากเกินความจำเป็น หรือเป็นดินหลังน้ำท่วม </p>',unsafe_allow_html=True)
                 
+                elif 0 not in detectedClass:
+                    st.write('')
+
                 #TODO Bacteria Blight--------------------------------------------------------------------
                 if 1 in detectedDict:
                     with st.expander(f'ตรวจพบโรคขอบใบแห้ง: {detectedDict[1]} ตำแหน่ง',True):
@@ -68,7 +71,9 @@ def showResult(detectedDict='',detectedClass='', file_upload='',showDetected=Tru
                                     <p class="indent"><span class="bold">ไม่ควรระบายน้ำจากแปลงที่เป็นโรคไปสู่แปลงอื่น</span></p> \
                                     <p class="indent"><span class="bold">ควรเฝ้าระวังการเกิดโรคถ้าปลูกข้าวพันธุ์ที่อ่อนแอต่อโรคนี้</span>เช่น พันธุ์ขาวดอกมะลิ 105 กข6 เหนียวสันป่าตอง พิษณุโลก 2  ชัยนาท 1 เมื่อเริ่มพบอาการของโรคบนใบข้าวให้ใช้สารป้องกันกำจัดโรคพืช เช่น ไอโซโพรไทโอเลน คอปเปอร์ไฮดรอกไซด์ เสตร็พโตมัยซินซัลเฟต+ออกซีเตทตราไซคลินไฮโดรคลอร์ไรด์ ไตรเบซิคคอปเปอร์ซัลเฟต</p>'
                                 ,unsafe_allow_html=True)   
-                
+                elif 1 not in detectedClass:
+                    st.write('')
+
                 #TODO Brown Spot--------------------------------------------------------------------
                 if 2 in detectedDict:
                     with st.expander(f'ตรวจพบโรคใบจุดสีน้ำตาล: {detectedDict[2]} ตำแหน่ง',True):
@@ -100,7 +105,9 @@ def showResult(detectedDict='',detectedClass='', file_upload='',showDetected=Tru
                                     <p class="indent"><span class="bold">ถ้าพบอาการของโรคใบจุดสีน้ำตาลรุนแรงทั่วไป 10 เปอร์เซ็นต์ของพื้นที่ใบในระยะข้าวแตกกอ หรือในระยะที่ต้นข้าวตั้งท้องใกล้ออกรวง</span> เมื่อพบอาการใบจุดสีน้ำตาลที่ใบธงในสภาพฝนตกต่อเนื่อง อาจทำให้เกิดโรคเมล็ดด่าง ควรพ่นด้วยสารป้องกันกำจัดเชื้อรา เช่น  อีดิเฟนฟอส คาร์เบนดาซิม\
                                         แมนโคเซ็บ หรือคาร์เบนดาซิม+แมนโคเซบ ตามอัตราที่ระบุ</p>'
                                 ,unsafe_allow_html=True)                                   
-                
+                elif 2 not in detectedClass:
+                    st.write('')
+
                 #TODO Sheath Blight--------------------------------------------------------------------
                 if 3 in detectedDict:
                     with st.expander(f'ตรวจพบโรคกาบใบแห้ง: {detectedDict[3]} ตำแหน่ง',True):
@@ -127,12 +134,14 @@ def showResult(detectedDict='',detectedClass='', file_upload='',showDetected=Tru
                                     <p class="indent"><span class="bold">ใช้ชีวภัณฑ์บาซิลลัส ซับทิลิส (เชื้อแบคทีเรียปฏิปักษ์) ในอัตราที่ระบุ</span></p>\
                                     <p class="indent"><span class="bold">ใช้สารป้องกันกำจัดเชื้อรา</span>เช่น โพรพิโคนาโซล เพนไซคูรอน (25%ดับบลิวพี) หรืออีดิเฟนเฟอส ตามอัตราที่ระบุโดยพ่นสารป้องกันกำจัดเชื้อรานี้ในบริเวณที่เริ่มพบโรคระบาด ไม่จำเป็นต้องพ่นทั้งแปลง เพราะโรคกาบใบแห้งจะเกิดเป็นหย่อมๆ</p>'
                                 ,unsafe_allow_html=True)
-                
+                elif 3 not in detectedClass:
+                    st.write('')
+
                 #TODO Tungro--------------------------------------------------------------------
                 if 4 in detectedDict:
                     with st.expander(f'ตรวจพบโรคใบสีส้ม: {detectedDict[4]} ตำแหน่ง',True):
                         st.write("โรคโรคใบสีส้ม (Rice Tungro Disease)")
-                        st.markdown(f'<h4 class="tab-subhead">โรคกาบใบแห้ง (Sheath blight Disease)</h4>', unsafe_allow_html=True)
+                        st.markdown(f'<h4 class="tab-subhead">โรคโรคใบสีส้ม (Rice Tungro Disease)</h4>', unsafe_allow_html=True)
                         st.markdown('<hr>',unsafe_allow_html=   True)  
                         tabd1,tabd2,tabd3,tabd4= st.tabs(['อาการของโรค','สาเหตุของโรคและภูมิภาคที่พบ','การแพร่ระบาด','การป้องกัน'])
                         with tabd2:  
@@ -155,8 +164,11 @@ def showResult(detectedDict='',detectedClass='', file_upload='',showDetected=Tru
                                     <p class="indent"><span class="bold">กำจัดวัชพืช และพืชอาศัยของเชื้อไวรัสและแมลงพาหะนำโรค</span></p>\
                                     <p class="indent"><span class="bold">ใช้สารป้องกันกำจัดแมลงพาหะ</span> ได้แก่ สารฆ่าแมลงในระยะที่แมลงเป็นตัวอ่อน เช่น ไดโนทีฟูเรน หรือ บูโพรเฟซิน หรือ อีโทเฟนพรอกซ์ ไม่ควรใช้สารฆ่าแมลงผสมกันหลายๆ ชนิด หรือใช้สารฆ่าแมลงผสมสารกำจัดโรคพืชหรือสารกำจัดวัชพืช เพราะอาจทำให้ประสิทธิภาพของสารฆ่าแมลงลดลง ไม่ใช้สารกลุ่มไพรีทรอยด์สังเคราะห์ เช่น ไซเพอร์มิทริน ไซฮาโลทริน เดลต้ามิทริน</p>'
                                 ,unsafe_allow_html=True)
+                elif 4 not in detectedClass:
+                    st.write('')
+
     elif showDetected and not detectedClass and file_upload != 'กล้องเว็บแคม' : st.markdown('<h4 class="h4-danger">ตรวจไม่พบโรคใบข้าว</h4>', unsafe_allow_html=True)  
-    else:
+    elif not showDetected:
         with st.container():
             #* เชื้อรา ------------------
             with st.expander('เชื้อรา',True):
