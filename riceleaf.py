@@ -22,7 +22,7 @@ rtc_configuration = {
     ]
 }
 modelForImage = torch.hub.load('yolov5', 'custom', path='weight/best__1.pt', _verbose=False, source='local')
-modelForWebcam = torch.hub.load('yolov5', 'custom', path='weight/best.pt', _verbose=False, source='local')
+modelForWebcam = torch.hub.load('yolov5', 'custom', path='weight/best__1.pt', _verbose=False, source='local')
 
 detectedClass = []
 detectedDict = {}

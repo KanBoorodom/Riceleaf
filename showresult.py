@@ -1,9 +1,9 @@
 import streamlit as st
 from PIL import Image, ImageEnhance
 def showResult(detectedDict='',detectedClass='', file_upload='',showDetected=True):
+    expanderContainer = st.empty()
     if showDetected and detectedDict:  
-        with st.empty():
-            with st.container():
+            with expanderContainer.container():
                 st.markdown('<h4 class="h4-success">ตรวจพบโรคใบข้าว</h4>', unsafe_allow_html=True)
                 #TODO Leaf Blast--------------------------------------------------------------------
                 if 0 in detectedDict:
